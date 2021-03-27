@@ -14,6 +14,7 @@ deve	 aguardar	 que	 todos	 os	 carros	 cruzem	 a	meta	 (mesmo	 que	 não	 seja	
 terminar.	 Após	 todos	 os	 carros	 concluírem	 a	 corrida,	 deverá	 imprimir	 as	
 estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*/
 
+
 /* DONE
 ● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
 */
