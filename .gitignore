@@ -1,9 +1,4 @@
 .idea
 /CMakeLists.txt
 /cmake-build-debug/
-<<<<<<< HEAD
-/main/
-/prog1
-=======
-main/prog1
->>>>>>> 290703b76f9a878720ec3b89b5f1209578c9fe23
+main
