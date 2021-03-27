@@ -1,7 +1,0 @@
-
-int zeca(){
-    printf("Ola");
-}
-
-
-
