@@ -3,7 +3,7 @@
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
 /* TO DO
-● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
+
 ● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Avarias
@@ -13,6 +13,13 @@ deve	 aguardar	 que	 todos	 os	 carros	 cruzem	 a	meta	 (mesmo	 que	 não	 seja	
 última	volta)	- os	carros	que	se	encontram	na	box	no	momento	da	instrução	devem	
 terminar.	 Após	 todos	 os	 carros	 concluírem	 a	 corrida,	 deverá	 imprimir	 as	
 estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*/
+/* DONE
+● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
+
+
+*/
+
+
 
 int main() {
     int *configs = read_config_file();
