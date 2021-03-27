@@ -17,6 +17,7 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 /* DONE
 ● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
 */
+
 int main() {
     int *configs = read_config_file();
     if(configs == NULL)
