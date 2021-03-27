@@ -1,4 +1,5 @@
 .idea
 /CMakeLists.txt
 /cmake-build-debug/
-.vscode/c_cpp_properties.json
+.vscode
+race_simulator
