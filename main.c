@@ -6,6 +6,9 @@ int main() {
     printf("asdasda\n");
     printf("ola\n");
     printf("ola");
-    printf("sad");
     return 0;
+}
+
+int zeca(){
+    printf("Ola");
 }
