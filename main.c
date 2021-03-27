@@ -7,4 +7,5 @@ int main() {
     //gss
     printf("%s\n", );
     return 0;
+    printf("OLA");
 }
