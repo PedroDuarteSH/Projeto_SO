@@ -6,6 +6,7 @@ int main() {
     printf("asdasda\n");
     printf("ola\n");
     printf("ola");
+    printf("ok");
     return 0;
 }
 
