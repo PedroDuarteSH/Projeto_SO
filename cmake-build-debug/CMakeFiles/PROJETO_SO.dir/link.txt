@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/PROJETO_SO.dir/main.c.o  -o PROJETO_SO.exe -Wl,--out-implib,libPROJETO_SO.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
