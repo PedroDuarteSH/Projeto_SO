@@ -2,8 +2,8 @@
 
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
-/* TO DO
 
+/* TO DO
 ● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Avarias
@@ -25,6 +25,7 @@ int main() {
         printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
     
 }
+
 
 int *read_config_file(){
     /* Config int[] format
