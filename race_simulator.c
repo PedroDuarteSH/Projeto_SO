@@ -16,8 +16,6 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 
 /* DONE
 ● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
-
-
 */
 
 
