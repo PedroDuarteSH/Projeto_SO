@@ -23,9 +23,9 @@ int main() {
     int *configs = read_config_file();
     if(configs == NULL)
         printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
-    
-}
+    printf("success");
 
+}
 
 int *read_config_file(){
     /* Config int[] format
