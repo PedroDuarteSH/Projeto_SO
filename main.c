@@ -6,10 +6,7 @@ int main() {
     printf("asdasda\n");
     printf("ola\n");
     printf("ola");
-    printf("ola");
+
     return 0;
 }
 
-int zeca(){
-    printf("Ola");
-}
