@@ -35,3 +35,8 @@ int *read_config_file(){
         return NULL;
     return configs;
 }
+
+void strip(char *phrase){
+    phrase[strcspn(phrase, "\r")] = 0;
+    phrase[strcspn(phrase, "\n")] = 0;
+}
