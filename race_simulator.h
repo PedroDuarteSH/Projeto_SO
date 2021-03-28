@@ -9,7 +9,8 @@
 //User define variables
 
 //Structs
-
+pid_t race_manager_process;
+pid_t malfunction_manager_process;
 //Functions declarations
 
 //Usefull information
