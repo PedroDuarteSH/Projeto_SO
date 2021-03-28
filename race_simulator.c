@@ -24,7 +24,6 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 
 int main() {
     int *configs = read_config_file();
-    printf("ok");
     if(configs == NULL)
         printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
     
