@@ -1,8 +1,16 @@
 #include "race_simulator.h"
 #include "functions.c"
+#include "race_manager.c"
+#include "malfunction_manager.c"
+
 
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
+<<<<<<< HEAD
+=======
+
+/* TO DO
+>>>>>>> ae6372e596c03af3f08f334ba2640c5be6cef6c1
 
 /* TO DO
 ● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
@@ -20,11 +28,22 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 ● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
 */
 
-
-
 int main() {
     int *configs = read_config_file();
     if(configs == NULL)
         printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
     
+    race_manager_process = fork();
+    if(race_manager == 0){
+        //RACE MANAGER PROCESS
+        race_manager();
+        exit(0);
+    }
+    malfunction_manager_process = fork();
+    if(malfunction_manager == 0){
+        //MALFUNCTION PROCESS
+        malfunction_manager();
+        exit(0);
+    }
+    //RACE SIMULATOR PROCESS
 }
