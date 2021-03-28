@@ -3,8 +3,10 @@
 #include "race_manager.c"
 #include "malfunction_manager.c"
 
+
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
+
 /* TO DO
 
 ● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
@@ -21,8 +23,6 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 /* DONE
 ● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
 */
-
-
 
 int main() {
     int *configs = read_config_file();
