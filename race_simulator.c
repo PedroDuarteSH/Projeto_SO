@@ -3,8 +3,8 @@
 
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
-/* TO DO
 
+/* TO DO
 ● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Corrida
 ● Inicia	o	processo	Gestor	de	Avarias
