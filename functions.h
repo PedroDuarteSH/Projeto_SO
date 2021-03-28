@@ -5,10 +5,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <assert.h>
+#include <stdio.h>
 
 //User define variables
 #define line_lenght 20
 #define number_of_configs 9
+#define key 1234
+int shmid;
 //Structs
 
 //Functions declarations
