@@ -1,5 +1,5 @@
-#ifndef race_simulator   /* Include guard */
-#define race_simulator
+#ifndef functions   /* Include guard */
+#define functions
 
 //C libraries
 #include <stdio.h>
@@ -7,10 +7,13 @@
 #include <string.h>
 
 //User define variables
-
+#define line_lenght 20
+#define number_of_configs 9
 //Structs
 
 //Functions declarations
+int *read_config_file();
+void strip(char *phrase);
 
 //Usefull information
 /* Config int[] format
