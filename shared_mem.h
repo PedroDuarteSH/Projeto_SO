@@ -12,6 +12,8 @@
 
 
 //user variables
+int *id;
+pthread_t *cars;
 typedef struct shr_memory{
     int config_shmid; //Config struct
     int race_shmid; //Race struct

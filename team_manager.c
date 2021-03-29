@@ -2,3 +2,12 @@
 //Fazer a Gestão da Box (APENAS 1) e Atualiza-a (Livre, Ocupada, reservada)
 //Fazer a Gestão dos Carros da equipa
 //Responsavel por reparações e atestar depósitos
+#include "shared_mem.h"
+
+void team_manager(){
+    for(int i = 0;i < 2;i++){ //mudar o 2
+        id[i] = 1;
+        pthread_create(&cars[i],NULL,cars,&id[i]); //mudar o cars
+    }
+    //Recebe menssagens pela queque e repara o carro se for preciso 
+}
