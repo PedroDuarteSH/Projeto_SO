@@ -4,10 +4,16 @@
 
 void race_manager(int shm_id){
 
-
-
-
-
+    //Espera que o setup das equipas esteja feito
+    //Começa a Corrida
+    pid_t new_team;
+    //Incia Carros
+    for(int i = 0;i < 2;i++){ //mudar o 2
+        new_team = fork();
+        if(new_team == 0){
+          team_manager();
+       }
+    }
 }
 
 
@@ -19,4 +25,5 @@ void attach_update_shm(){
     
     //Attact race struct
     //Ininitiates
+
 }
