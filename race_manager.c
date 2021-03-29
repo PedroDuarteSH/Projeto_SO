@@ -16,12 +16,8 @@ void race_manager_init(int incoming_shm_id){
     print_config_file();
     #endif
 
-    while(1){
-
-        if()
-    }
-
     //avisar o semaforo que a corrida
+    printf("PODE VOLTAR AO PAI\n");
     sem_post(&race_struct->race_begin);
     
     //Espera que o setup das equipas esteja feito
@@ -48,7 +44,7 @@ void print_config_file(){
     printf("%d\n", config_struct->T_breakdown_interval);
     printf("%d\n", config_struct->T_Box_min);
     printf("%d\n", config_struct->T_Box_Max);
-    printf("%d", config_struct->Fuel_tank_capacity);
+    printf("%d\n", config_struct->Fuel_tank_capacity);
 }
 
 void attach_update_shm(int incoming_shm_id){
