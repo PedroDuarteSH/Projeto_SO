@@ -10,6 +10,10 @@
 #include <semaphore.h>
 #include <pthread.h>
 
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+
 
 //user variables
 int *id;
@@ -40,7 +44,7 @@ typedef struct race{
 
 typedef struct team{
     int name[MAX_SIZE]; 
-    int status;
+    int box_status;
     const int number_cars;
     int cars_shmid;    //Array in shared memory with team structs address
 }team;

@@ -2,15 +2,8 @@
 #define race_simulator  /* Include guard */
   
 //C libraries
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/wait.h>
-#include <sys/ipc.h>
 
 //User libraries
-
 #include "shared_mem.h"
 
 //User define variables
@@ -18,11 +11,14 @@ pid_t race_manager_process;
 pid_t malfunction_manager_process;
 
 int shm_id;
-
+shr_memory *shm_struct;
+config *config_struct;
 
 //Structs
 
 //Functions declarations
+void gen_shared_memory();
+void process_config_file();
 
 //Usefull information
 /* Config int[] format

@@ -40,3 +40,5 @@ void strip(char *phrase){
     phrase[strcspn(phrase, "\r")] = 0;
     phrase[strcspn(phrase, "\n")] = 0;
 }
+
+
