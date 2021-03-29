@@ -5,20 +5,21 @@
 
 //User libraries
 #include "shared_mem.h"
+#include "functions.h"
+#include "race_manager.h"
 
 //User define variables
 pid_t race_manager_process;
 pid_t malfunction_manager_process;
 
-int shm_id;
-shr_memory *shm_struct;
-config *config_struct;
+
 
 //Structs
 
 //Functions declarations
-void gen_shared_memory();
-void process_config_file();
+int gen_shared_memory(shr_memory *shm_struct, config *config_struct);
+void process_config_file(int *configs, config *config_struct);
+void race_manager_init(int incoming_shm_id);
 
 //Usefull information
 /* Config int[] format

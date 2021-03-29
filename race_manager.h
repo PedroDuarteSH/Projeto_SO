@@ -7,15 +7,11 @@
 #include "shared_mem.h"
 
 //User define variables
-int shm_id;
-shr_memory *shm_struct;
-config *config_struct;
-race *race_struct;
 //Structs
 
 //Functions declarations
+void attach_update_shm(int shm_id, shr_memory *shm_struct,config *config_struct);
+void print_config_file(config *config_struct);
 void race_manager_init(int incoming_shm_id);
-void attach_update_shm();
-void print_config_file();
 
-#endif 
+#endif

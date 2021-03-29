@@ -17,9 +17,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-//user variables
-int *id;
-pthread_t *cars;
+//structs
 typedef struct shr_memory{
     int config_shmid; //Config struct
     int race_shmid; //Race struct
@@ -58,5 +56,7 @@ typedef struct car{
     int done_trips;
     int current_fuel;
 }car;
+
+//Public declared functions
 
 #endif
