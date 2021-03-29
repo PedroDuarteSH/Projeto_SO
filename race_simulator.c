@@ -44,3 +44,17 @@ int main() {
     */
     //RACE SIMULATOR PROCESS
 }
+
+
+
+int gen_shared_memory(){
+
+
+
+
+
+
+
+
+    
+}
