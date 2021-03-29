@@ -20,6 +20,8 @@ estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*
 int shm_id;
 shr_memory *shm_struct;
 config *config_struct;
+race *race_struct;
+sem_t waiting_race_init;
 
 int main(){
   //read config file
@@ -28,14 +30,18 @@ int main(){
   if (configs == NULL)
     printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
 
+  process_config_file(configs);
   //generate the shared memory
   gen_shared_memory();
 
   //Updates the config struct with file configs
-  process_config_file(configs);
+  
   race_manager_process = fork();
+
   if (race_manager_process == 0){
     //RACE MANAGER PROCESS
+
+
     race_manager_init(shm_id);
     exit(0);
   }
@@ -46,9 +52,13 @@ int main(){
         malfunction_manager();
         exit(0);
     }*/
-  wait(NULL);
 
-  //RACE SIMULATOR PROCESS
+  
+  
+  
+  
+  wait(NULL);
+  printf("Finished");
 }
 
 //Generates and attach to this process the shared memory struture
@@ -73,7 +83,7 @@ void gen_shared_memory()
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
-  return;
+  race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 }
 
 void process_config_file(int *configs){
