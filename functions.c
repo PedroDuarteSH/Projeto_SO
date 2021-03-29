@@ -1,4 +1,6 @@
 #include "functions.h"
+#include "shared_mem.h"
+#include <time.h>
 
 int *read_config_file(){
     /* Config int[] format
@@ -42,3 +44,25 @@ void strip(char *phrase){
 }
 
 
+FILE *log_file = NULL;
+sem_t log_sem;
+void global_init_log(FILE *input_log_file, sem_t input_log_sem){
+    log_file =  input_log_file;
+    log_sem = input_log_sem;
+}
+
+void print(char *result){
+    char time_str[30];
+
+    time_t timer = time(NULL);
+    struct tm* tm_info = localtime(&timer);
+
+    strftime(time_str, 30, "%Y-%m-%d %H:%M:%S", tm_info);
+
+    sem_wait(&log_sem);
+    fprintf(log_file, "%s:%s\n",time_str,result);
+    printf("%s:%s\n",time_str,result);
+    fflush(log_file);
+    fflush(stdin);
+    sem_post(&log_sem);
+}

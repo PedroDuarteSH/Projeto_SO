@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "shared_mem.h"
 //User define variables
 #define line_lenght 20
 #define number_of_configs 9
@@ -14,6 +14,9 @@
 //Functions declarations
 int *read_config_file();
 void strip(char *phrase);
+void global_init_log(FILE *input_log_file, sem_t input_log_sem);
+void print(char *result);
+
 
 //Usefull information
 /* Config int[] format
