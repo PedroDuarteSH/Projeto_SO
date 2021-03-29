@@ -1,7 +1,6 @@
 //Começa a corrida e acaba
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
-
 #include "race_manager.h"
 
 //initiated in father process
@@ -51,6 +50,6 @@ void attach_update_shm(int incoming_shm_id){
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 
-    //Ininitiates
+    race_struct->status = .1;
 
 }
