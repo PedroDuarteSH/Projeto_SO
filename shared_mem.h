@@ -10,6 +10,10 @@
 #include <semaphore.h>
 #include <pthread.h>
 
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+
 
 //user variables
 typedef struct shr_memory{

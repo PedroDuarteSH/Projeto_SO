@@ -2,12 +2,6 @@
 #define race_simulator  /* Include guard */
   
 //C libraries
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/wait.h>
-#include <sys/ipc.h>
 
 //User libraries
 #include "shared_mem.h"
