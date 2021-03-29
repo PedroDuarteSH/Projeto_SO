@@ -31,23 +31,26 @@ int main(){
   
   //generate the shared memory
   gen_shared_memory();
-  
+  init_log();
+  print("Initiated_program!");
+
   process_config_file(configs);
   //Updates the config struct with file configs
-  sem_init(&race_struct->race_begin, 1, 1);
-  sem_wait(&race_struct->race_begin);
+  sem_init(&race_struct->race_begin, 1, 0);
   race_manager_process = fork();
-  
   if(race_manager_process == 0){
+    print("Starting race process manager...");
     //RACE MANAGER PROCESS
     race_manager_init(shm_id);
     exit(0);
   }
   malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
+        print("Created Malfuntion process");
         sem_wait(&race_struct->race_begin);
-        printf("A CORRIDA JÀ COMEÇOU\n");
+        print("Malfuntion process initiated");
         //MALFUNCTION PROCESS
+        
         exit(0);
   }
   printf("Finished");
@@ -93,4 +96,10 @@ void process_config_file(int *configs){
   config_struct->T_Box_min = configs[6];
   config_struct->T_Box_Max = configs[7];
   config_struct->Fuel_tank_capacity = configs[8];
+}
+
+void init_log(){
+  shm_struct->log_file = fopen("log.txt", "w");
+  sem_init(&shm_struct->log_sem, 1, 1);
+  global_init_log(shm_struct->log_file, shm_struct->log_sem);
 }

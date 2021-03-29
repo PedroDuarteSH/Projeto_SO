@@ -2,4 +2,5 @@
 //Recebem mensagens do Gestor de Avarias,sobre avarias
 
 void cars(){
+    
 }

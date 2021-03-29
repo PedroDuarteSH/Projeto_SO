@@ -8,6 +8,10 @@ int shm_id;
 shr_memory *shm_struct;
 config *config_struct;
 race *race_struct;
+int *teams_address;
+
+//temporary
+#define line_lenght 200
 
 void race_manager_init(int incoming_shm_id){
     attach_update_shm(incoming_shm_id);
@@ -17,7 +21,24 @@ void race_manager_init(int incoming_shm_id){
     #endif
 
     //avisar o semaforo que a corrida
-    printf("PODE VOLTAR AO PAI\n");
+    //ler o ficheiro / Receber namedPipe
+    FILE *cars_file = fopen("cars.temp", "r");
+
+    char *line =  malloc(sizeof(char) * line_lenght);
+
+    while(fgets(line,line_lenght, cars_file) != NULL){
+        strip(line);
+        if(strcmp(line, "START RACE!") == 0){
+            #ifdef debug
+            print("Race started with success");
+            #endif
+        }
+            
+        
+        print(line);
+        sleep(1);
+    }
+    print("Race Started");
     sem_post(&race_struct->race_begin);
     
     //Espera que o setup das equipas esteja feito
@@ -35,6 +56,7 @@ void race_manager_init(int incoming_shm_id){
 
 
 }
+
 void print_config_file(){
     printf("%d\n",config_struct->T_units_second);
     printf("%d\n", config_struct->lap_distance);
@@ -48,9 +70,27 @@ void print_config_file(){
 }
 
 void attach_update_shm(int incoming_shm_id){
+
     //first 3 lines wasn't needed (already attached in father process)
     shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
+    if ((race_struct->teams_shmid = shmget(IPC_PRIVATE, sizeof(int) * config_struct->number_of_teams, IPC_CREAT | 0777)) < 1){
+        perror("Error in shmget with IPC_CREAT\n");
+        exit(1);
+    }
+    teams_address = shmat(race_struct->teams_shmid, NULL, 0);
+    for (int i = 0; i < config_struct->number_of_teams; i++)
+    {
+        teams_address[i] = -1;
+    }
+    
+}
+
+
+void ADD_CAR(char * line){
+
+
+
 }

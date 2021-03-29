@@ -5,7 +5,7 @@
 
 //User libraries
 #include "shared_mem.h"
-
+#include "functions.h"
 //User define variables
 //Structs
 
