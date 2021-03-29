@@ -1,16 +1,17 @@
-#ifndef race_simulator   /* Include guard */
-#define race_simulator
-
+#ifndef race_simulator
+#define race_simulator  /* Include guard */
+  
 //C libraries
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 //User define variables
-
-//Structs
 pid_t race_manager_process;
 pid_t malfunction_manager_process;
+
+//Structs
+
 //Functions declarations
 
 //Usefull information
