@@ -5,10 +5,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+
+//User libraries
+
+#include "shared_mem.h"
 
 //User define variables
 pid_t race_manager_process;
 pid_t malfunction_manager_process;
+
+int shm_id;
+
 
 //Structs
 

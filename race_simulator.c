@@ -3,8 +3,6 @@
 #include "race_manager.c"
 #include "malfunction_manager.c"
 
-#include "shared_mem.h"
-
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
 
@@ -49,12 +47,8 @@ int main() {
 
 int gen_shared_memory(){
 
+    if((shm_id = shmget(IPC_PRIVATE, sizeof(shr_memory), IPC_CREAT|0700)) < 1){
 
 
-
-
-
-
-
-    
+    }
 }
