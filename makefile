@@ -1,7 +1,7 @@
 CC = gcc
-OBJS = race_simulator.c race_simulator.h
+OBJS = race_simulator.c race_simulator.h shared_mem.h race_manager.c race_manager.h functions.c functions.h
 PROG = race_simulator
-CFLAGS = -g -Wall -pthread
+CFLAGS = -Wall -pthread -g
 
 
 all:	${PROG} clean

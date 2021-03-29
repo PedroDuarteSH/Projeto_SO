@@ -1,6 +1,8 @@
 #ifndef shared_mem   /* Include guard */
 #define shared_mem
 
+#define debug
+
 #define MAX_SIZE 30
 
 //imports 
@@ -9,15 +11,15 @@
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
-
+#include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
+#include <sys/shm.h>
 
 
-//user variables
-int *id;
-pthread_t *cars;
+
+//structs
 typedef struct shr_memory{
     int config_shmid; //Config struct
     int race_shmid; //Race struct
@@ -40,6 +42,7 @@ typedef struct config{
 typedef struct race{
     int status; //Started, ended, interruped, 
     int teams_shmid; //Array in shared memory with team structs address
+    sem_t race_begin;
 }race;
 
 typedef struct team{
@@ -56,5 +59,7 @@ typedef struct car{
     int done_trips;
     int current_fuel;
 }car;
+
+//Public declared functions
 
 #endif
