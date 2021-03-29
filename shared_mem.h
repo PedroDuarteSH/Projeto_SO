@@ -1,6 +1,8 @@
 #ifndef shared_mem   /* Include guard */
 #define shared_mem
 
+#define debug
+
 #define MAX_SIZE 30
 
 //imports 
@@ -9,11 +11,11 @@
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
-
+#include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
-
+#include <sys/shm.h>
 
 //user variables
 int *id;

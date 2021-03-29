@@ -14,7 +14,8 @@ race *race_struct;
 //Structs
 
 //Functions declarations
+void race_manager_init(int incoming_shm_id);
 void attach_update_shm();
-
+void print_config_file();
 
 #endif 

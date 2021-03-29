@@ -32,13 +32,13 @@ int main() {
     gen_shared_memory();
     
     //Updates the config struct with file configs
-    void process_config_file(configs);
+    process_config_file(configs);
     
-    /*
+    
     race_manager_process = fork();
     if(race_manager_process == 0){
         //RACE MANAGER PROCESS
-        race_manager();
+        race_manager_init(shm_id);
         exit(0);
     }
     malfunction_manager_process = fork();
@@ -47,7 +47,8 @@ int main() {
         malfunction_manager();
         exit(0);
     }
-    */
+    wait(NULL);
+    
     //RACE SIMULATOR PROCESS
 }
 
