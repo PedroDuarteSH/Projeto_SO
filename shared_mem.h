@@ -41,15 +41,15 @@ typedef struct config{
 
 typedef struct race{
     int status; //Started, ended, interruped, 
-    int teams_shmid; //Array in shared memory with team structs address
+    int teams_shmid;//Array in shared memory with team structs address
     sem_t race_begin;
 }race;
 
 typedef struct team{
     int name[MAX_SIZE]; 
     int box_status;
-    const int number_cars;
-    int cars_shmid;    //Array in shared memory with team structs address
+    int cars_shmid;//Array in shared memory with team structs address
+    sem_t modify_team;
 }team;
 
 typedef struct car{
