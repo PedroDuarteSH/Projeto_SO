@@ -37,6 +37,7 @@ int main(){
   sem_init(&race_struct->race_begin, 1, 1);
   sem_wait(&race_struct->race_begin);
   race_manager_process = fork();
+  
   if(race_manager_process == 0){
     //RACE MANAGER PROCESS
     race_manager_init(shm_id);
@@ -44,7 +45,6 @@ int main(){
   }
   malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
-        
         sem_wait(&race_struct->race_begin);
         printf("A CORRIDA JÀ COMEÇOU\n");
         //MALFUNCTION PROCESS
