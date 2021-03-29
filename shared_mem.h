@@ -42,6 +42,7 @@ typedef struct config{
 typedef struct race{
     int status; //Started, ended, interruped, 
     int teams_shmid; //Array in shared memory with team structs address
+    sem_t race_begin;
 }race;
 
 typedef struct team{

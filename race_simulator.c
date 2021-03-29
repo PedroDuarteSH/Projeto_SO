@@ -21,8 +21,6 @@ int shm_id;
 shr_memory *shm_struct;
 config *config_struct;
 race *race_struct;
-sem_t waiting_race_init;
-
 int main(){
   //read config file
   int *configs = NULL;
@@ -35,13 +33,10 @@ int main(){
   gen_shared_memory();
 
   //Updates the config struct with file configs
-  
+  sem_init(&race_struct->race_begin, 1, 0);
   race_manager_process = fork();
-
   if (race_manager_process == 0){
     //RACE MANAGER PROCESS
-
-
     race_manager_init(shm_id);
     exit(0);
   }

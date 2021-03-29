@@ -16,7 +16,14 @@ void race_manager_init(int incoming_shm_id){
     print_config_file();
     #endif
 
+    while(1){
 
+        if()
+    }
+
+    //avisar o semaforo que a corrida
+    sem_post(&race_struct->race_begin);
+    
     //Espera que o setup das equipas esteja feito
     //Começa a Corrida
     //pid_t new_team;
@@ -49,6 +56,5 @@ void attach_update_shm(int incoming_shm_id){
     shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
-
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 }
