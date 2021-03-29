@@ -17,6 +17,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+
+
 //structs
 typedef struct shr_memory{
     int config_shmid; //Config struct

@@ -4,13 +4,18 @@
 
 #include "race_manager.h"
 
+//initiated in father process
+int shm_id;
+shr_memory *shm_struct;
+config *config_struct;
+race *race_struct;
+
 void race_manager_init(int incoming_shm_id){
-    int shm_id = incoming_shm_id;
-
-    shr_memory *shm_struct = NULL;
-    config *config_struct = NULL;
-
-    attach_update_shm(shm_id, shm_struct, config_struct);
+    attach_update_shm(incoming_shm_id);
+    
+    #ifdef debug
+    print_config_file();
+    #endif
     //Espera que o setup das equipas esteja feito
     //Começa a Corrida
     //pid_t new_team;
@@ -23,12 +28,10 @@ void race_manager_init(int incoming_shm_id){
        }
     }*/
 
-    #ifdef debug
-    print_config_file(config_struct);
-    #endif
+
 
 }
-void print_config_file(config *config_struct){
+void print_config_file(){
     printf("%d\n",config_struct->T_units_second);
     printf("%d\n", config_struct->lap_distance);
     printf("%d\n", config_struct->lap_number);
@@ -40,11 +43,14 @@ void print_config_file(config *config_struct){
     printf("%d", config_struct->Fuel_tank_capacity);
 }
 
-void attach_update_shm(int shm_id,  shr_memory *shm_struct, config *config_struct ){
+void attach_update_shm(int incoming_shm_id){
+
+    //first 3 lines wasn't needed (already attached in father process)
+    shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
-    
-    //Attact race struct
+    race_struct = shmat(shm_struct->race_shmid, NULL, 0);
+
     //Ininitiates
 
 }

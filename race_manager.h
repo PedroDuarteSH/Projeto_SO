@@ -10,8 +10,8 @@
 //Structs
 
 //Functions declarations
-void attach_update_shm(int shm_id, shr_memory *shm_struct,config *config_struct);
-void print_config_file(config *config_struct);
+void attach_update_shm(int shm_id);
+void print_config_file();
 void race_manager_init(int incoming_shm_id);
 
 #endif
