@@ -4,9 +4,25 @@
 #define debug
 
 #define MAX_SIZE 30
+
+//Box status
 #define FREE 0
 #define BUSY 1
 #define RESERVED 2
+
+//variable defines
+#define CAR_INPUT_SIZE 11
+#define TRUE 1
+#define FALSE 0
+
+//Car management
+#define INVALID_COMMAND 0
+#define CANT_ADD_TEAM 1
+#define CAR_ADDED 2
+
+//String siz management
+#define INPUT_LENGHT 200
+#define SMALL_STR_LENGHT 10
 
 //imports 
 #include <stdio.h>
@@ -19,8 +35,6 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
-
 
 //structs
 typedef struct shr_memory{
@@ -65,6 +79,14 @@ typedef struct car{
     int current_fuel;
 }car;
 
-//Public declared functions
+//Vars
+int shm_id;
+race *race_struct;
+config *config_struct;
+shr_memory *shm_struct;
+team **teams;
 
+pid_t race_manager_process;
+pid_t malfunction_manager_process;
+//Public declared functions
 #endif

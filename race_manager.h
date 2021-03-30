@@ -1,43 +1,18 @@
 #ifndef race_manager
 #define race_manager  /* Include guard */
 
-//variable defines
-#define CAR_INPUT_SIZE 11
-#define TRUE 1
-#define FALSE 0
-
-//Car management
-#define INVALID_COMMAND 0
-#define CANT_ADD_TEAM 1
-#define CAR_ADDED 2
-
-//String siz management
-#define INPUT_LENGHT 200
-#define SMALL_STR_LENGHT 10
-
-//C libraries
-
 //User libraries
 #include "shared_mem.h"
 #include "functions.h"
 #include "team_manager.h"
 
-//User define variables
-int shm_id;
-shr_memory *shm_struct;
-config *config_struct;
-race *race_struct;
-team **teams;
-
-
-//Structs
 
 //Functions declarations
 //race manager initiation
-void race_manager_init(int incoming_shm_id);
+void race_manager_init();
 
 //shared memory attach to process
-void attach_update_race_shm(int incoming_shm_id);
+void attach_update_race_shm();
 
 //Processes command recieved in file/namedpipe(later)
 int process_command(char *line);

@@ -10,10 +10,7 @@
 #define line_lenght 20
 #define number_of_configs 9
 
-int shm_id;
-shr_memory *shm_struct;
-config *config_struct;
-race *race_struct;
+
 //Structs
 
 //Functions declarations

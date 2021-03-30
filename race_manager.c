@@ -5,8 +5,8 @@
 
 team *create_team(char *team_name, int i);
 
-void race_manager_init(int incoming_shm_id){
-    attach_update_race_shm(incoming_shm_id);
+void race_manager_init(){
+    attach_update_race_shm();
 
 #ifdef debug
     print_config_file();
@@ -50,9 +50,8 @@ void race_manager_init(int incoming_shm_id){
     }*/
 }
 
-void attach_update_race_shm(int incoming_shm_id){
+void attach_update_race_shm(){
     //first 3 lines wasn't needed (already attached in father process)
-    shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
@@ -166,7 +165,7 @@ team *create_team(char *team_name, int i){
             perror("Error in shmget with IPC_CREAT\n");
             exit(1);
         }
-    strcpy(teams[i]->name, team_name); 
+    strcpy(teams[i]->name, team_name);
     teams[i]->number_team_cars = 0;
     teams[i]->box_status = FREE;
     return (teams[i]);
@@ -181,7 +180,7 @@ void start_race(){
         if(new_team == 0){
             print("Creating team...");
             //sem_init(&, 1, 0);
-            team_manager_start(shm_id, i);
+            team_manager_start(i);
         }
     }
 }

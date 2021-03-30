@@ -5,15 +5,12 @@
 #include "team_manager.h"
 
 
-shr_memory *shm_struct;
 team *this_team;
-race *race_struct;
 car *shm_indexes;
-int shm_id;
 pthread_t *cars;
 
-void team_manager_start(int incoming_shm_id, int i){
-    attach_update_team_shm(incoming_shm_id, i);
+void team_manager_start(int i){
+    attach_update_team_shm(i);
     team_manager_init();
     //gestaoBox()
     //gerirAbastecimentoDosCarros
@@ -40,8 +37,7 @@ void team_manager_init(){
 }
 
 
-void attach_update_team_shm(int incoming_shm_id, int i){
-    shm_id = incoming_shm_id;
+void attach_update_team_shm(int i){
     shm_struct = shmat(shm_id, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
     team **teams = shmat(race_struct->teams_shmid, NULL, 0);

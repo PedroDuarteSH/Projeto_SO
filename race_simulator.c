@@ -37,7 +37,7 @@ int main(){
   if(race_manager_process == 0){
     print("Starting race process manager...");
     //RACE MANAGER PROCESS
-    race_manager_init(shm_id);
+    race_manager_init();
     exit(0);
   }
 
