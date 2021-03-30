@@ -46,17 +46,19 @@ typedef struct race{
 }race;
 
 typedef struct team{
-    int name[MAX_SIZE]; 
+    char name[MAX_SIZE]; 
     int box_status;
+    int number_team_cars;
     int cars_shmid;//Array in shared memory with team structs address
     sem_t modify_team;
 }team;
 
 typedef struct car{
+    int number;
     int state;
     int consumption;
     int speed;
-    int done_trips;
+    int reliability;
     int current_fuel;
 }car;
 
