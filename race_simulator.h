@@ -7,6 +7,7 @@
 #include "race_manager.h"
 
 
+
 //Usefull information
 /* Config int[] format
     0 - T_units_second;
