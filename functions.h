@@ -9,6 +9,11 @@
 //User define variables
 #define line_lenght 20
 #define number_of_configs 9
+
+int shm_id;
+shr_memory *shm_struct;
+config *config_struct;
+race *race_struct;
 //Structs
 
 //Functions declarations
@@ -16,7 +21,9 @@ int *read_config_file();
 void strip(char *phrase);
 void global_init_log(FILE *input_log_file, sem_t input_log_sem);
 void print(char *result);
-
+void gen_shared_memory();
+void process_config_file(int *configs);
+void init_log();
 
 //Usefull information
 /* Config int[] format
