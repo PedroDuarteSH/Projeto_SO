@@ -56,7 +56,7 @@ typedef struct team{
 typedef struct car{
     int number;
     int state;
-    int consumption;
+    float consumption;
     int speed;
     int reliability;
     int current_fuel;

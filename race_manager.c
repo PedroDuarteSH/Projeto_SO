@@ -46,6 +46,7 @@ void race_manager_init(int incoming_shm_id){
         }
     }
     free(command);
+    free(line);
     
     
 
@@ -112,28 +113,28 @@ team *find_team(char *team_name){
             teams[i]->number_team_cars = 0;
             return teams[i];
         }
-        else if(strcmp(teams[i]->name, team_name) == 0){
-            print("Found team");
+        else if(strcmp(teams[i]->name, team_name) == 0)
             return teams[i];
-        }
+        
     }
     return NULL;
 }
 
-car *add_car(char *line){
+int add_car(char *line){
     char *temp = concat("", line);
     char **line_splited = malloc(sizeof(char *) * team_input_size);
-    if(verify_car_command(line, line_splited) == FALSE){
-        print(concat("WRONG COMMAND => ", temp));
-        return;
+    
+    if(verify_car_command(temp, line_splited) == FALSE){
+        print(concat("WRONG COMMAND => ", line));
+        return 0; //Wrong command
     }
-    free(temp);
+
     team *t;
     if((t = find_team(line_splited[2])) == NULL){
         #ifdef debug
-        print(concat("ERROR FINDING TEAM", line));
+        print(concat("ERROR FINDING TEAM =>", line));
         #endif
-        return NULL;
+        return 1; //Unable to find the team
     }
     int car_shmid;
     if ((car_shmid = shmget(IPC_PRIVATE, sizeof(car) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
@@ -144,17 +145,19 @@ car *add_car(char *line){
     car **team_cars = shmat(t->cars_shmid, NULL, 0);
     //Attach car
     car *c = shmat(car_shmid, NULL, 0);
-
     c->number = strtol(line_splited[4], &temp, 10);
     c->speed = strtol(line_splited[6], &temp, 10);
-    c->consumption = strtoll(line_splited[8], &temp, 10);
+    c->consumption = strtof(line_splited[8], &temp);
     c->reliability = strtol(line_splited[10], &temp, 10);
-
-    print(t->name);
-
     team_cars[t->number_team_cars++] = c;
+
+    
+    print(concat("CAR ADDED SUCCESSFULLY => ", line));
+
     shmdt(team_cars);
     shmdt(c);
+
+    return 2; //Car added successfully
 }
 
 int verify_teams(){
