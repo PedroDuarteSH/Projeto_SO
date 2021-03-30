@@ -47,10 +47,10 @@ int main(){
         sem_wait(&race_struct->race_begin);
         print("Malfuntion process initiated");
         //MALFUNCTION PROCESS
-        
         exit(0);
   }  
 
+  wait(NULL);
   wait(NULL);
   print("Finished");
 }

@@ -8,7 +8,7 @@
 shr_memory *shm_struct;
 team *this_team;
 race *race_struct;
-int *shm_indexes;
+car *shm_indexes;
 int shm_id;
 pthread_t *cars;
 
@@ -19,20 +19,23 @@ void team_manager_start(int incoming_shm_id, int i){
     //gerirAbastecimentoDosCarros
 }
 void team_manager_init(){
-    sleep(2);
+    print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
     cars =(pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
-    
+    shm_indexes = malloc(sizeof(int) * 1);
     //Colocar endereços de shared memory necessarios aos carros
-    shm_indexes[0] = 1;
-    
+    print(concat("STARTING TEAM CARS ", this_team->name));
+    car ** team_cars;
     for(int i = 0;i < this_team->number_team_cars;i++){
-        pthread_create(&(cars[i]),NULL,car_init,&shm_indexes); //mudar o cars
+        team_cars = shmat(this_team->cars_shmid, NULL, 0);
+        shm_indexes = team_cars[i];
+        pthread_create(&cars[i],NULL,car_init,&shm_indexes); //mudar o cars
     }
-    print(concat("READY: CARS OF TEAM", this_team->name));
+    print(concat("READY: CARS OF TEAM ", this_team->name));
 
     for(int i = 0;i < this_team->number_team_cars;i++){
         pthread_join(cars[i],NULL); //mudar o cars
     }
+    print(concat("Team joined ", this_team->name));
     exit(0);
 }
 
@@ -44,4 +47,11 @@ void attach_update_team_shm(int incoming_shm_id, int i){
     team **teams = shmat(race_struct->teams_shmid, NULL, 0);
     this_team = teams[i];
     shmdt(teams);
+}
+
+void *car_init(void * shm_ids){
+    sleep(2);
+    print("CAR RACING...");
+    sleep(1);
+    pthread_exit(NULL);
 }

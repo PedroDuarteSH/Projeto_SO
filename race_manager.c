@@ -23,16 +23,20 @@ void race_manager_init(int incoming_shm_id){
         fgets(line, INPUT_LENGHT, cars_file);
         if (game_started == FALSE){
             game_started = process_command(line);
-            sleep(1);
+            sleep(0);
         }
         else{
+
+
             break;
         }
     }
     free(command);
-
     free(line);
-
+    //espera todas as equipas terminarem
+    for (int i = 0; i < config_struct->number_of_teams; i++){
+            wait(NULL);
+    }
     //Espera que o setup das equipas esteja feito
     //Começa a Corrida
     //pid_t new_team;
@@ -117,8 +121,9 @@ int add_car(char *line){
     team_cars[t->number_team_cars++] = c;
     shmdt(team_cars);
     shmdt(c);
-    return CAR_ADDED;
+    
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
+    return CAR_ADDED;
     //Car added successfully
 }
 
@@ -169,10 +174,12 @@ team *create_team(char *team_name, int i){
 
 void start_race(){
     sem_post(&race_struct->race_begin);
+    print("STARTING RACE...");
     pid_t new_team;
     for(int i = 0;i < config_struct->number_of_teams; i++){
         new_team = fork();
         if(new_team == 0){
+            print("Creating team...");
             //sem_init(&, 1, 0);
             team_manager_start(shm_id, i);
         }
