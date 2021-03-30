@@ -52,13 +52,9 @@ int main(){
         //MALFUNCTION PROCESS
         
         exit(0);
-  }
-  printf("Finished");
-  
-  
-  
+  }  
   wait(NULL);
-  
+  print("Finished");
 }
 
 //Generates and attach to this process the shared memory struture

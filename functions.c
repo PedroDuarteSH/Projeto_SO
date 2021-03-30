@@ -52,12 +52,12 @@ void global_init_log(FILE *input_log_file, sem_t input_log_sem){
 }
 
 void print(char *result){
-    char time_str[30];
+    char time_str[20];
 
     time_t timer = time(NULL);
     struct tm* tm_info = localtime(&timer);
 
-    strftime(time_str, 30, "%Y-%m-%d %H:%M:%S", tm_info);
+    strftime(time_str, 20, "%H:%M:%S", tm_info);
 
     sem_wait(&log_sem);
     fprintf(log_file, "%s:%s\n",time_str,result);
