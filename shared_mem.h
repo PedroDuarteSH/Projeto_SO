@@ -4,6 +4,9 @@
 #define debug
 
 #define MAX_SIZE 30
+#define FREE 0
+#define BUSY 1
+#define RESERVED 2
 
 //imports 
 #include <stdio.h>
