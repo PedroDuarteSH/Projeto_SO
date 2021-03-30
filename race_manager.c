@@ -12,7 +12,7 @@ config *config_struct;
 race *race_struct;
 team **teams;
  
-#define team_input_size 11
+#define CAR_INPUT_SIZE 11
 #define TRUE 1
 #define FALSE 0
 
@@ -92,7 +92,6 @@ void attach_update_shm(int incoming_shm_id){
 }
 
 void start_race(){
-
     sem_post(&race_struct->race_begin);
     pid_t new_team;
     for(int i = 0;i < config_struct->number_of_teams; i++){
@@ -132,9 +131,10 @@ team *create_team(char * team_name, int i){
 }
 
 car *add_car(char *line){
+    char **line_splited = malloc(sizeof(char *) * CAR_INPUT_SIZE);
     char *team_name = malloc(sizeof(char) * SMALL_STR_LENGHT);
     char *temp;
-    verify_car_command(line);
+    verify_car_command(line, line_splited);
     team *t;
     if((t = find_team(line_splited[2])) == NULL){
         #ifdef debug
@@ -171,7 +171,7 @@ int verify_teams(){
 }
 
 int verify_car_command(char *line, char ** line_splited){
-    for (int i = 0; i < team_input_size; i++)
+    for (int i = 0; i < CAR_INPUT_SIZE; i++)
         line_splited[i] = NULL;
     //read command
     char* temp;
@@ -182,7 +182,7 @@ int verify_car_command(char *line, char ** line_splited){
         index++;
     }
     //verify if something is NULL
-    if(line_splited[team_input_size-1] == NULL)
+    if(line_splited[CAR_INPUT_SIZE-1] == NULL)
         return FALSE;
     return TRUE;
 }
