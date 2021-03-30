@@ -9,7 +9,8 @@ shr_memory *shm_struct;
 config *config_struct;
 race *race_struct;
 team **teams;
-
+ 
+#define team_input_size 11
 #define TRUE 1
 #define FALSE 0
 
@@ -29,16 +30,16 @@ void race_manager_init(int incoming_shm_id){
 
     char *line = malloc(sizeof(char) * INPUT_LENGHT);
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
-    int game_started;
+    int game_started = FALSE;
     while (TRUE){
         line[0] = 0;
-        sem_getvalue(&race_struct->race_begin, &game_started);
         fgets(line, INPUT_LENGHT, cars_file);
         if (game_started == FALSE){
-
-            process_command(line);
+            game_started = process_command(line);
+            sleep(1);
         }
         else{
+            sem_post(&race_struct->race_begin);
             if(line[0] != 0) //invalid command
                 print("Rejected, race already started!");
             break;
@@ -80,12 +81,10 @@ void attach_update_shm(int incoming_shm_id){
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
     //iniciar equipas
-    if ((race_struct->teams_shmid = shmget(IPC_PRIVATE, sizeof(team *) * config_struct->number_of_teams, IPC_CREAT | 0777)) < 1)
-    {
+    if ((race_struct->teams_shmid = shmget(IPC_PRIVATE, sizeof(team *) * config_struct->number_of_teams, IPC_CREAT | 0777)) < 1){
         print("Error in shmget with IPC_CREAT creating teams array");
         exit(1);
     }
-
     teams = shmat(race_struct->teams_shmid, NULL, 0);
     for (int i = 0; i < config_struct->number_of_teams; i++)
         teams[i] = NULL;
@@ -122,54 +121,65 @@ team *find_team(char *team_name){
 }
 
 car *add_car(char *line){
-    char *team_name = malloc(sizeof(char) * SMALL_STR_LENGHT);
-    char *temp;
-    verify_car_command(line);
-    /*strtok(line, ", \n");//First 
-    strtok(NULL, ", \n");//team
-    team_name = strtok(NULL, ", ");
+    char *temp = concat("", line);
+    char **line_splited = malloc(sizeof(char *) * team_input_size);
+    if(verify_car_command(line, line_splited) == FALSE){
+        print(concat("WRONG COMMAND => ", temp));
+        return;
+    }
+    free(temp);
     team *t;
-    if((t = find_team(team_name)) == NULL)
+    if((t = find_team(line_splited[2])) == NULL){
+        #ifdef debug
+        print(concat("ERROR FINDING TEAM", line));
+        #endif
         return NULL;
+    }
     int car_shmid;
     if ((car_shmid = shmget(IPC_PRIVATE, sizeof(car) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
         perror("Error in shmget with IPC_CREAT\n");
         exit(1);
     }
+    //Attach team cars array
+    car **team_cars = shmat(t->cars_shmid, NULL, 0);
+    //Attach car
     car *c = shmat(car_shmid, NULL, 0);
-    strtok(NULL, ", \n");
-    c->number = strtol(strtok(NULL, ", \n"), &temp, 10);
-    strtok(NULL, ", \n");
-    c->speed = strtol(strtok(NULL, ", \n"), &temp, 10);
-    strtok(NULL, ", \n");
-    c->consumption = strtoll(strtok(NULL, ", \n"), &temp, 10);
-    strtok(NULL, ", \n");
-    c->reliability = strtol(strtok(NULL, ", \n"), &temp, 10);
-    t->number_team_cars++;*/
+
+    c->number = strtol(line_splited[4], &temp, 10);
+    c->speed = strtol(line_splited[6], &temp, 10);
+    c->consumption = strtoll(line_splited[8], &temp, 10);
+    c->reliability = strtol(line_splited[10], &temp, 10);
+
+    print(t->name);
+
+    team_cars[t->number_team_cars++] = c;
+    shmdt(team_cars);
+    shmdt(c);
 }
 
 int verify_teams(){
     for (int i = 0; i < config_struct->number_of_teams; i++)
         if (teams[i] == NULL)
-            return TRUE;
-    return FALSE;
+            return FALSE;
+    return TRUE;
 }
 
-int verify_car_command(char *line){
-    char **line_splited = malloc(sizeof(char *) * 10);
+int verify_car_command(char *line, char ** line_splited){
+    for (int i = 0; i < team_input_size; i++)
+        line_splited[i] = NULL;
+    //read command
     line_splited[0] = strtok(line, ", \n");
-    for (int i = 1; i < 10; i++){
+    for (int i = 1; i < team_input_size; i++)
         line_splited[i] = strtok(NULL, ", \n");
-    }
-    for (int i = 1; i < 10; i++){
-        if(line_splited[i] != NULL)
-            printf("%d %s", i, line_splited[i]);
-    }
-    printf("\n");
+    //verify if something is NULL
+    for (int i = 1; i < 11; i++)
+        if(line_splited[i] == NULL)
+            return FALSE;
+    return TRUE;
 }
 
 
-void process_command(char *line){
+int process_command(char *line){
     strip(line);
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
@@ -177,14 +187,15 @@ void process_command(char *line){
     if (strcmp(line, "START RACE!") == 0){
         if (verify_teams() == TRUE){
             start_race();
-            sem_post(&race_struct->race_begin);
+            return TRUE;
         }
         else print("CANNOT START, NOT ENOUGH TEAMS");
+        
     }
     else if (strcmp(command, "ADDCAR") == 0){
         add_car(line);
-        sleep(1);
     }
-    else print(strcat("WRONG COMMAND => ", line));
+    else print(concat("WRONG COMMAND => ", line));
+    return FALSE;
 }
 

@@ -16,7 +16,7 @@ int *read_config_file();
 void strip(char *phrase);
 void global_init_log(FILE *input_log_file, sem_t input_log_sem);
 void print(char *result);
-
+char * concat (char * s1, char * s2);
 
 //Usefull information
 /* Config int[] format
