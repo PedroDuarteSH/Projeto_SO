@@ -109,7 +109,6 @@ team *find_team(char *team_name){
                 perror("Error in shmget with IPC_CREAT\n");
                 exit(1);
             }
-            print("before cpy");
             strcpy(teams[i]->name, team_name); 
             teams[i]->number_team_cars = 0;
             return teams[i];
@@ -150,7 +149,6 @@ int verify_teams(){
     for (int i = 0; i < config_struct->number_of_teams; i++)
         if (teams[i] == NULL)
             return TRUE;
-    return TRUE;
     return FALSE;
 }
 
