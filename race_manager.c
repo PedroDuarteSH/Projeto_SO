@@ -117,17 +117,20 @@ team *find_team(char *team_name){
             print("Found team");
             return teams[i];
         }
-            
     }
+    return NULL;
 }
 
 car *add_car(char *line){
     char *team_name = malloc(sizeof(char) * SMALL_STR_LENGHT);
     char *temp;
-    strtok(line, ", \n");//First 
+    verify_car_command(line);
+    /*strtok(line, ", \n");//First 
     strtok(NULL, ", \n");//team
     team_name = strtok(NULL, ", ");
-    team *t = find_team(team_name);
+    team *t;
+    if((t = find_team(team_name)) == NULL)
+        return NULL;
     int car_shmid;
     if ((car_shmid = shmget(IPC_PRIVATE, sizeof(car) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
         perror("Error in shmget with IPC_CREAT\n");
@@ -142,7 +145,7 @@ car *add_car(char *line){
     c->consumption = strtoll(strtok(NULL, ", \n"), &temp, 10);
     strtok(NULL, ", \n");
     c->reliability = strtol(strtok(NULL, ", \n"), &temp, 10);
-    t->number_team_cars++;
+    t->number_team_cars++;*/
 }
 
 int verify_teams(){
@@ -150,6 +153,19 @@ int verify_teams(){
         if (teams[i] == NULL)
             return TRUE;
     return FALSE;
+}
+
+int verify_car_command(char *line){
+    char **line_splited = malloc(sizeof(char *) * 10);
+    line_splited[0] = strtok(line, ", \n");
+    for (int i = 1; i < 10; i++){
+        line_splited[i] = strtok(NULL, ", \n");
+    }
+    for (int i = 1; i < 10; i++){
+        if(line_splited[i] != NULL)
+            printf("%d %s", i, line_splited[i]);
+    }
+    printf("\n");
 }
 
 
