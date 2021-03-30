@@ -45,8 +45,6 @@ void race_manager_init(int incoming_shm_id){
         }
     }
     free(command);
-    
-    
 
     //Espera que o setup das equipas esteja feito
     //Começa a Corrida
@@ -92,26 +90,21 @@ void attach_update_shm(int incoming_shm_id){
 }
 
 void start_race(){
-
+    pid_t new_team;
+    for(int i = 0;i < config_struct->number_of_teams; i++){
+        new_team = fork();
+        if(new_team == 0){
+            //sem_init(&, 1, 0);
+            team_manager(shm_id);
+        }
+    }
 }
 
 team *find_team(char *team_name){
     int i = 0;
     for (i = 0; i < config_struct->number_of_teams; i++){
         if(teams[i] == NULL){
-            int team_id;
-            if ((team_id = shmget(IPC_PRIVATE, sizeof(team), IPC_CREAT | 0777)) < 1){
-                perror("Error in shmget with IPC_CREAT\n");
-                exit(1);
-            }
-            teams[i] = shmat(team_id, NULL, 0);
-            if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
-                perror("Error in shmget with IPC_CREAT\n");
-                exit(1);
-            }
-            strcpy(teams[i]->name, team_name); 
-            teams[i]->number_team_cars = 0;
-            return teams[i];
+            return(create_team(team_name, i));
         }
         else if(strcmp(teams[i]->name, team_name) == 0){
             print("Found team");
@@ -119,6 +112,22 @@ team *find_team(char *team_name){
         }
     }
     return NULL;
+}
+
+team *create_team(char * team_name, int i){
+    int team_id;
+    if ((team_id = shmget(IPC_PRIVATE, sizeof(team), IPC_CREAT | 0777)) < 1){
+        perror("Error in shmget with IPC_CREAT\n");                exit(1);
+    }
+    teams[i] = shmat(team_id, NULL, 0);
+    if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
+            perror("Error in shmget with IPC_CREAT\n");
+            exit(1);
+        }
+    strcpy(teams[i]->name, team_name); 
+    teams[i]->number_team_cars = 0;
+    teams[i]->box_status = FREE;
+    return teams[i];
 }
 
 car *add_car(char *line){
