@@ -3,7 +3,7 @@
 //Cria processos Team_manager
 #include "race_manager.h"
 
-char* itoa(int value, char* result, int base);
+team *create_team(char *team_name, int i);
 
 //initiated in father process
 int shm_id;
@@ -20,7 +20,7 @@ team **teams;
 #define INPUT_LENGHT 200
 #define SMALL_STR_LENGHT 10
 void race_manager_init(int incoming_shm_id){
-    attach_update_shm(incoming_shm_id);
+    attach_update_race_shm(incoming_shm_id);
 
 #ifdef debug
     print_config_file();
@@ -75,7 +75,7 @@ void print_config_file(){
     printf("%d\n", config_struct->Fuel_tank_capacity);
 }
 
-void attach_update_shm(int incoming_shm_id){
+void attach_update_race_shm(int incoming_shm_id){
     //first 3 lines wasn't needed (already attached in father process)
     shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
@@ -98,7 +98,7 @@ void start_race(){
         new_team = fork();
         if(new_team == 0){
             //sem_init(&, 1, 0);
-            team_manager(shm_id);
+            team_manager_start(shm_id);
         }
     }
 }
@@ -107,17 +107,18 @@ team *find_team(char *team_name){
     int i = 0;
     for (i = 0; i < config_struct->number_of_teams; i++){
         if(teams[i] == NULL){
-            return(create_team(team_name, i));
+            return(create_team((char *)team_name, (int)i));
         }
         else if(strcmp(teams[i]->name, team_name) == 0) return teams[i];   
     }
     return NULL;
 }
 
-team *create_team(char * team_name, int i){
+team *create_team(char *team_name, int i){
     int team_id;
     if ((team_id = shmget(IPC_PRIVATE, sizeof(team), IPC_CREAT | 0777)) < 1){
-        perror("Error in shmget with IPC_CREAT\n");                exit(1);
+        perror("Error in shmget with IPC_CREAT\n");
+        exit(1);
     }
     teams[i] = shmat(team_id, NULL, 0);
     if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
@@ -127,14 +128,14 @@ team *create_team(char * team_name, int i){
     strcpy(teams[i]->name, team_name); 
     teams[i]->number_team_cars = 0;
     teams[i]->box_status = FREE;
-    return teams[i];
+    return (teams[i]);
 }
 
 car *add_car(char *line){
     char **line_splited = malloc(sizeof(char *) * CAR_INPUT_SIZE);
-    char *team_name = malloc(sizeof(char) * SMALL_STR_LENGHT);
-    char *temp;
-    verify_car_command(line, line_splited);
+    char *temp = concat("", line);
+    
+    verify_car_command(temp, line_splited);
     team *t;
     if((t = find_team(line_splited[2])) == NULL){
         #ifdef debug

@@ -19,8 +19,8 @@ int *id;
 int shm_id;
 pthread_t *cars;
 
-void team_manager(int incoming_shm_id){
-    attach_update_shm(incoming_shm_id);
+void team_manager_start(int incoming_shm_id){
+    attach_update_team_shm(incoming_shm_id);
     team_manager_init();
     //gestaoBox()
     //gerirAbastecimentoDosCarros
@@ -36,7 +36,7 @@ void team_manager_init(){
 }
 
 
-void attach_update_shm(int incoming_shm_id){
+void attach_update_team_shm(int incoming_shm_id){
     shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
