@@ -31,25 +31,21 @@ int main(){
 
   process_config_file(configs);
   //Updates the config struct with file configs
-  sem_init(&race_struct->race_begin, 1, 0);
   race_manager_process = fork();
-
   if(race_manager_process == 0){
     print("Starting race process manager...");
     //RACE MANAGER PROCESS
     race_manager_init();
     exit(0);
   }
-
   malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
-        print("Created Malfuntion process");
-        sem_wait(&race_struct->race_begin);
-        print("Malfuntion process initiated");
-        //MALFUNCTION PROCESS
-        exit(0);
-  }  
-
+    print("Created Malfuntion process");
+    sem_wait(&race_struct->race_begin);
+    print("Malfuntion process initiated");
+    //MALFUNCTION PROCESS
+    exit(0);
+  }
   wait(NULL);
   wait(NULL);
   print("Finished");

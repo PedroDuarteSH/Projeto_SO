@@ -3,10 +3,9 @@
 //Cria processos Team_manager
 #include "race_manager.h"
 
-team *create_team(char *team_name, int i);
 
-void race_manager_init(int incoming_shm_id){
-    attach_update_race_shm(incoming_shm_id);
+void race_manager_init(){
+    attach_update_race_shm();
 
 #ifdef debug
     print_config_file();
@@ -50,9 +49,8 @@ void race_manager_init(int incoming_shm_id){
     }*/
 }
 
-void attach_update_race_shm(int incoming_shm_id){
+void attach_update_race_shm(){
     //first 3 lines wasn't needed (already attached in father process)
-    shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
@@ -68,7 +66,6 @@ void attach_update_race_shm(int incoming_shm_id){
 
 int process_command(char *line){
     strip(line);
-
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
     strtok(command, " ");
@@ -163,27 +160,33 @@ team *create_team(char *team_name, int i){
     }
     teams[i] = shmat(team_id, NULL, 0);
     if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
-            perror("Error in shmget with IPC_CREAT\n");
-            exit(1);
-        }
+        perror("Error in shmget with IPC_CREAT\n");
+        exit(1);
+    }
     strcpy(teams[i]->name, team_name); 
     teams[i]->number_team_cars = 0;
     teams[i]->box_status = FREE;
+    pid_t new_team;
+    new_team = fork();
+    if(new_team == 0){
+        print(concat("Creating team ", team_name));
+        //sem_init(&, 1, 0);
+        team_manager_start(i);
+    }
     return (teams[i]);
 }
 
 void start_race(){
-    sem_post(&race_struct->race_begin);
-    print("STARTING RACE...");
-    pid_t new_team;
-    for(int i = 0;i < config_struct->number_of_teams; i++){
-        new_team = fork();
-        if(new_team == 0){
-            print("Creating team...");
-            //sem_init(&, 1, 0);
-            team_manager_start(i);
-        }
+    
+    for (int i = 0; i < config_struct->number_of_teams; i++){
+        sem_wait(&race_struct->teams_ready);
     }
+    print("STARTING RACE...");
+    for (int i = 0; i < config_struct->number_of_teams+1; i++){
+        sem_post(&race_struct->race_begin);
+    }
+    
+    
 }
 
 int verify_teams(){
