@@ -5,8 +5,8 @@
 
 team *create_team(char *team_name, int i);
 
-void race_manager_init(int incoming_shm_id){
-    attach_update_race_shm(incoming_shm_id);
+void race_manager_init(){
+    attach_update_race_shm();
 
 #ifdef debug
     print_config_file();
@@ -50,9 +50,8 @@ void race_manager_init(int incoming_shm_id){
     }*/
 }
 
-void attach_update_race_shm(int incoming_shm_id){
+void attach_update_race_shm(){
     //first 3 lines wasn't needed (already attached in father process)
-    shm_id = incoming_shm_id;
     shm_struct = shmat(shm_id, NULL, 0);
     config_struct = shmat(shm_struct->config_shmid, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
@@ -68,6 +67,7 @@ void attach_update_race_shm(int incoming_shm_id){
 
 int process_command(char *line){
     strip(line);
+
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
     strtok(command, " ");
@@ -77,13 +77,11 @@ int process_command(char *line){
             return TRUE;
         }
         else print("CANNOT START, NOT ENOUGH TEAMS");
-        
     }
     else if (strcmp(command, "ADDCAR") == 0){
         add_car(line);
     }
     else{
-        
         print(concat("WRONG COMMAND => ", line));
         //return INVALID_COMMAND;
     }
@@ -181,7 +179,7 @@ void start_race(){
         if(new_team == 0){
             print("Creating team...");
             //sem_init(&, 1, 0);
-            team_manager_start(shm_id, i);
+            team_manager_start(i);
         }
     }
 }

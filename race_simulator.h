@@ -1,26 +1,13 @@
 #ifndef race_simulator
 #define race_simulator  /* Include guard */
   
-//C libraries
-
 //User libraries
 #include "shared_mem.h"
 #include "functions.h"
 #include "race_manager.h"
 
-//User define variables
-pid_t race_manager_process;
-pid_t malfunction_manager_process;
 
 
-
-//Structs
-
-//Functions declarations
-void gen_shared_memory();
-void process_config_file(int *configs);
-void race_manager_init(int incoming_shm_id);
-void init_log();
 //Usefull information
 /* Config int[] format
     0 - T_units_second;
