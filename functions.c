@@ -118,7 +118,7 @@ void print(char *result){
     fprintf(log_file, "%s:%s\n",time_str,result);
     printf("%s:%s\n",time_str,result);
     fflush(log_file);
-
+    fflush(stdout);
     sem_post(&log_sem);
 }
 
