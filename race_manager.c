@@ -110,8 +110,6 @@ int add_car(char *line){
     int *team_cars = shmat(t->cars_shmid, NULL, 0);
     //Attach car
     car *c = shmat(car_shmid, NULL, 0);
-    strcpy(c->name, t->name);
-    //c->name = concat("", t->name);
     c->number = strtol(line_splited[4], &temp, 10);
     c->speed = strtol(line_splited[6], &temp, 10);
     c->consumption = strtof(line_splited[8], &temp);
