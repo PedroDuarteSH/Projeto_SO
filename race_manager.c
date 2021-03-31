@@ -107,16 +107,16 @@ int add_car(char *line){
         exit(1);
     }
     //Attach team cars array
-    car **team_cars = shmat(t->cars_shmid, NULL, 0);
+    int *team_cars = shmat(t->cars_shmid, NULL, 0);
     //Attach car
     car *c = shmat(car_shmid, NULL, 0);
+    strcpy(c->name, t->name);
+    //c->name = concat("", t->name);
     c->number = strtol(line_splited[4], &temp, 10);
     c->speed = strtol(line_splited[6], &temp, 10);
     c->consumption = strtof(line_splited[8], &temp);
     c->reliability = strtol(line_splited[10], &temp, 10);
-    team_cars[t->number_team_cars++] = shmat(c, NULL, 0);
-    shmdt(team_cars);
-    shmdt(c);
+    team_cars[t->number_team_cars++] = car_shmid;
     
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
     return CAR_ADDED;
@@ -158,7 +158,7 @@ team *create_team(char *team_name, int i){
         exit(1);
     }
     teams[i] = shmat(team_id, NULL, 0);
-    if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
+    if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(int) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
         perror("Error in shmget with IPC_CREAT\n");
         exit(1);
     }
@@ -175,15 +175,12 @@ team *create_team(char *team_name, int i){
 }
 
 void start_race(){
-    
     for (int i = 0; i < config_struct->number_of_teams; i++){
         sem_wait(&race_struct->teams_ready);
     }
     print("STARTING RACE...");
     for (int i = 0; i < config_struct->number_of_teams + 1; i++)
-        sem_post(&race_struct->race_begin);
-    
-    
+        sem_post(&race_struct->race_begin);    
 }
 
 int verify_teams(){

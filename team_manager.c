@@ -6,7 +6,7 @@
 
 
 team *this_team;
-car **team_cars;
+int *team_cars;
 pthread_t *cars;
 
 void team_manager_start(int i){
@@ -20,15 +20,15 @@ void team_manager_init(){
     cars =(pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
     //shm_indexes = malloc(sizeof(int) * 1);
     //Colocar endereços de shared memory necessarios aos carros
-    int race_starting;
+   
     sem_post(&race_struct->teams_ready);
 
     //Wait for race to start
     sem_wait(&race_struct->race_begin);
-
-    car ** team_cars = shmat(this_team->cars_shmid, NULL, 0);
+    team_cars = shmat(this_team->cars_shmid, NULL, 0);
     for(int i = 0;i < this_team->number_team_cars;i++){
-        pthread_create(&cars[i],NULL,car_init,&i); //mudar o cars
+        car * c = shmat(team_cars[i], NULL,0);
+        pthread_create(&cars[i],NULL,car_init,c);
     }
 
     //print(concat("READY: CARS OF TEAM ", this_team->name));
@@ -51,11 +51,14 @@ void attach_update_team_shm(int i){
 
 
 void *car_init(void * arg){
-    int i = *(int *)(arg);
-    print("HERE");
-    car * c = team_cars[i];
-    char *string = "";
-    print(concat("CAR RACCING", string));
-    sleep(3);
+    car *c = (car *)(arg);
+    char buffer [100];
+    snprintf (buffer, 100, "Team %s :Car number %d is Raccing",this_team->name, c->number);
+    print(buffer);
+    //char * temp;
+    //temp = itoa(c->number, temp, 10);
+    sleep(rand()%5);
+    snprintf (buffer, 100, "Team %s :Car number %d reached finish line ",this_team->name, c->number);
+    print(buffer);
     pthread_exit(NULL);
 }

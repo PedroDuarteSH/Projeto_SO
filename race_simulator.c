@@ -48,5 +48,5 @@ int main(){
   }
   wait(NULL);
   wait(NULL);
-  //print("Finished");
+  print("Finished");
 }
