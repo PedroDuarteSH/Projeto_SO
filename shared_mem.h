@@ -72,7 +72,6 @@ typedef struct team{
 }team;
 
 typedef struct car{
-    char name[10];
     int number;
     int state;
     float consumption;
