@@ -10,21 +10,29 @@ void gen_shared_memory(){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
-  shm_struct = shmat(shm_id, NULL, 0);
+  if((shm_struct = shmat(shm_id, NULL, 0)) == (void*) -1){
+    error("Failed to allocate Shared Memory", errno);
+		exit(1);
+	}
 
   //Generate config structure shared memory updating the shared memory struct
   if ((shm_struct->config_shmid = shmget(IPC_PRIVATE, sizeof(config), IPC_CREAT | 0777)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
-  config_struct = shmat(shm_struct->config_shmid, NULL, 0);
+  if((config_struct = shmat(shm_struct->config_shmid, NULL, 0)) == (void*) -1){
+    error("Failed to allocate Shared Memory", errno);
+		exit(1);
+  }
 
   if ((shm_struct->race_shmid = shmget(IPC_PRIVATE, sizeof(race), IPC_CREAT | 0777)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
-  race_struct = shmat(shm_struct->race_shmid, NULL, 0);
-
+  if((race_struct = shmat(shm_struct->race_shmid, NULL, 0)) == (void*) -1){
+    error("Failed to allocate Shared Memory", errno);
+		exit(1);
+  }
 
   sem_init(&race_struct->race_begin, 1, 0);
   sem_init(&race_struct->teams_ready, 1, 0);

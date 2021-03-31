@@ -45,9 +45,19 @@ void team_manager_init(){
 
 
 void attach_update_team_shm(int i){
-    shm_struct = shmat(shm_id, NULL, 0);
-    race_struct = shmat(shm_struct->race_shmid, NULL, 0);
-    team **teams = shmat(race_struct->teams_shmid, NULL, 0);
+    if((shm_struct = shmat(shm_id, NULL, 0)) == (void *) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
+    if((race_struct = shmat(shm_struct->race_shmid, NULL, 0)) == (void *) -1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
+    team **teams;
+    if((teams = shmat(race_struct->teams_shmid, NULL, 0)) == (void *) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     this_team = teams[i];
     shmdt(teams);
 }

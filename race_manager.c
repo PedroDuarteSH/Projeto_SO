@@ -51,15 +51,27 @@ void race_manager_init(){
 
 void attach_update_race_shm(){
     //first 3 lines wasn't needed (already attached in father process)
-    shm_struct = shmat(shm_id, NULL, 0);
-    config_struct = shmat(shm_struct->config_shmid, NULL, 0);
-    race_struct = shmat(shm_struct->race_shmid, NULL, 0);
+    if((shm_struct = shmat(shm_id, NULL, 0)) == (void *) -1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
+    if((config_struct = shmat(shm_struct->config_shmid, NULL, 0)) == (void *) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
+    if((race_struct = shmat(shm_struct->race_shmid, NULL, 0)) == (void *) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     //iniciar equipas
     if ((race_struct->teams_shmid = shmget(IPC_PRIVATE, sizeof(team *) * config_struct->number_of_teams, IPC_CREAT | 0777)) < 1){
         print("Error in shmget with IPC_CREAT creating teams array");
         exit(1);
     }
-    teams = shmat(race_struct->teams_shmid, NULL, 0);
+    if((teams = shmat(race_struct->teams_shmid, NULL, 0)) == (void*) -1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     for (int i = 0; i < config_struct->number_of_teams; i++)
         teams[i] = NULL;
 }
@@ -107,9 +119,17 @@ int add_car(char *line){
         exit(1);
     }
     //Attach team cars array
-    car **team_cars = shmat(t->cars_shmid, NULL, 0);
+    car **team_cars;
+    if((team_cars = shmat(t->cars_shmid, NULL, 0)) == (void *) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     //Attach car
-    car *c = shmat(car_shmid, NULL, 0);
+    car * c;
+    if((c = shmat(car_shmid, NULL, 0)) == (void*) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     c->number = strtol(line_splited[4], &temp, 10);
     c->speed = strtol(line_splited[6], &temp, 10);
     c->consumption = strtof(line_splited[8], &temp);
@@ -157,7 +177,10 @@ team *create_team(char *team_name, int i){
         perror("Error in shmget with IPC_CREAT\n");
         exit(1);
     }
-    teams[i] = shmat(team_id, NULL, 0);
+    if((teams[i] = shmat(team_id, NULL, 0)) == (void*) - 1){
+        error("Failed to allocate Shared Memory", errno);
+		exit(1);
+    }
     if ((teams[i]->cars_shmid = shmget(IPC_PRIVATE, sizeof(car*) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
         perror("Error in shmget with IPC_CREAT\n");
         exit(1);
