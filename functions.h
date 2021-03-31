@@ -25,7 +25,7 @@ void process_config_file(int *configs);
 //String auxiliar
 char * concat (char *s1, char *s2);
 void strip(char *phrase);
-
+char* itoa(int value, char* result, int base);
 //Log_writing
 void init_log();
 void global_init_log(FILE *input_log_file, sem_t input_log_sem);

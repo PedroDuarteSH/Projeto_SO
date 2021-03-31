@@ -5,7 +5,6 @@
 //Generates and attach to this process the shared memory struture
 void gen_shared_memory(){
   //Generate global structure shared memory
-
   if ((shm_id = shmget(IPC_PRIVATE, sizeof(shr_memory), IPC_CREAT | 0777)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
@@ -26,6 +25,7 @@ void gen_shared_memory(){
   race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 
 
+  //semaphore init
   sem_init(&race_struct->race_begin, 1, 0);
   sem_init(&race_struct->teams_ready, 1, 0);
 }
@@ -118,7 +118,7 @@ void print(char *result){
     fprintf(log_file, "%s:%s\n",time_str,result);
     printf("%s:%s\n",time_str,result);
     fflush(log_file);
-    fflush(stdin);
+
     sem_post(&log_sem);
 }
 
@@ -134,4 +134,34 @@ char * concat (char * s1, char * s2) {
 	strcpy(result,s1);
 	strcat(result,s2);
 	return result;
+}
+
+
+/**
+ * C++ version 0.4 char* style "itoa":
+ * Written by Lukás Chmela
+ * Released under GPLv3.
+ */
+char* itoa(int value, char* result, int base) {
+    // check that the base if valid
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+    } while ( value );
+
+    // Apply negative sign
+    if (tmp_value < 0) *ptr++ = '-';
+    *ptr-- = '\0';
+    while(ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
 }

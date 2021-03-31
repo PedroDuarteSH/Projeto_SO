@@ -114,7 +114,7 @@ int add_car(char *line){
     c->speed = strtol(line_splited[6], &temp, 10);
     c->consumption = strtof(line_splited[8], &temp);
     c->reliability = strtol(line_splited[10], &temp, 10);
-    team_cars[t->number_team_cars++] = c;
+    team_cars[t->number_team_cars++] = shmat(c, NULL, 0);
     shmdt(team_cars);
     shmdt(c);
     
@@ -169,7 +169,6 @@ team *create_team(char *team_name, int i){
     new_team = fork();
     if(new_team == 0){
         print(concat("Creating team ", team_name));
-        //sem_init(&, 1, 0);
         team_manager_start(i);
     }
     return (teams[i]);
@@ -181,9 +180,8 @@ void start_race(){
         sem_wait(&race_struct->teams_ready);
     }
     print("STARTING RACE...");
-    for (int i = 0; i < config_struct->number_of_teams+1; i++){
+    for (int i = 0; i < config_struct->number_of_teams + 1; i++)
         sem_post(&race_struct->race_begin);
-    }
     
     
 }
