@@ -24,6 +24,10 @@ void gen_shared_memory(){
     exit(1);
   }
   race_struct = shmat(shm_struct->race_shmid, NULL, 0);
+
+
+  sem_init(&race_struct->race_begin, 1, 0);
+  sem_init(&race_struct->teams_ready, 1, 0);
 }
 
 //Config file gesture
