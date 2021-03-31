@@ -6,7 +6,7 @@
 
 
 team *this_team;
-car *shm_indexes;
+int *team_cars;
 pthread_t *cars;
 
 void team_manager_start(int i){
@@ -18,20 +18,17 @@ void team_manager_start(int i){
 void team_manager_init(){
     print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
     cars =(pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
-    shm_indexes = malloc(sizeof(int) * 1);
+    //shm_indexes = malloc(sizeof(int) * 1);
     //Colocar endereços de shared memory necessarios aos carros
-    int race_starting;
+   
     sem_post(&race_struct->teams_ready);
 
     //Wait for race to start
     sem_wait(&race_struct->race_begin);
-
-    car ** team_cars;
-    //print(concat("STARTING TEAM CARS ", this_team->name));
+    team_cars = shmat(this_team->cars_shmid, NULL, 0);
     for(int i = 0;i < this_team->number_team_cars;i++){
-        team_cars = shmat(this_team->cars_shmid, NULL, 0);
-        shm_indexes = team_cars[i];
-        pthread_create(&cars[i],NULL,car_init,&shm_indexes); //mudar o cars
+        car * c = shmat(team_cars[i], NULL,0);
+        pthread_create(&cars[i],NULL,car_init,c);
     }
 
     //print(concat("READY: CARS OF TEAM ", this_team->name));
@@ -39,7 +36,7 @@ void team_manager_init(){
     for(int i = 0;i < this_team->number_team_cars;i++){
         pthread_join(cars[i],NULL); //Wait for car threads to finish
     }
-    print(concat("Dead team: ", this_team->name));
+    //print(concat("Dead team: ", this_team->name));
     exit(0);
 }
 
@@ -52,8 +49,16 @@ void attach_update_team_shm(int i){
     shmdt(teams);
 }
 
-void *car_init(void * shm_ids){
-    print("CAR RACING...");
-    sleep(3);
+
+void *car_init(void * arg){
+    car *c = (car *)(arg);
+    char buffer [100];
+    snprintf (buffer, 100, "Team %s :Car number %d is Raccing",this_team->name, c->number);
+    print(buffer);
+    //char * temp;
+    //temp = itoa(c->number, temp, 10);
+    sleep(rand()%5);
+    snprintf (buffer, 100, "Team %s :Car number %d reached finish line ",this_team->name, c->number);
+    print(buffer);
     pthread_exit(NULL);
 }

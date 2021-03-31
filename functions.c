@@ -5,7 +5,6 @@
 //Generates and attach to this process the shared memory struture
 void gen_shared_memory(){
   //Generate global structure shared memory
-
   if ((shm_id = shmget(IPC_PRIVATE, sizeof(shr_memory), IPC_CREAT | 0777)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
@@ -26,6 +25,7 @@ void gen_shared_memory(){
   race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 
 
+  //semaphore init
   sem_init(&race_struct->race_begin, 1, 0);
   sem_init(&race_struct->teams_ready, 1, 0);
 }
@@ -118,7 +118,7 @@ void print(char *result){
     fprintf(log_file, "%s:%s\n",time_str,result);
     printf("%s:%s\n",time_str,result);
     fflush(log_file);
-    fflush(stdin);
+    fflush(stdout);
     sem_post(&log_sem);
 }
 
@@ -135,3 +135,4 @@ char * concat (char * s1, char * s2) {
 	strcat(result,s2);
 	return result;
 }
+
