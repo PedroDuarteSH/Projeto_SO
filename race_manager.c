@@ -75,7 +75,6 @@ int process_command(char *line){
             return TRUE;
         }
         else print("CANNOT START, NOT ENOUGH TEAMS");
-        printf("ok\n");
     }
     else if (strcmp(command, "ADDCAR") == 0){
         add_car(line);
