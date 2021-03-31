@@ -67,6 +67,7 @@ void attach_update_race_shm(){
 
 int process_command(char *line){
     strip(line);
+    
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
     strtok(command, " ");
