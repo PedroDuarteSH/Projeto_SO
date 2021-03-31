@@ -67,7 +67,7 @@ void attach_update_race_shm(){
 
 int process_command(char *line){
     strip(line);
-    
+
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
     strtok(command, " ");
@@ -77,7 +77,7 @@ int process_command(char *line){
             return TRUE;
         }
         else print("CANNOT START, NOT ENOUGH TEAMS");
-        
+        printf("ok\n");
     }
     else if (strcmp(command, "ADDCAR") == 0){
         add_car(line);
