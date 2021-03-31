@@ -117,7 +117,8 @@ int add_car(char *line){
     c->consumption = strtof(line_splited[8], &temp);
     c->reliability = strtol(line_splited[10], &temp, 10);
     team_cars[t->number_team_cars++] = car_shmid;
-    
+    shmdt(team_cars);
+    shmdt(c);
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
     return CAR_ADDED;
     //Car added successfully
