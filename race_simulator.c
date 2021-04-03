@@ -49,6 +49,8 @@ int main(){
   wait(NULL);
   wait(NULL);
   print("Finished");
+  free(configs);
   clean();
+
   print("Limpo");
 }

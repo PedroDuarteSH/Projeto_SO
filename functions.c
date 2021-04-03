@@ -71,7 +71,6 @@ void clean(){
   shmctl(shm_id, IPC_RMID, NULL);
 }
 
-
 //Config file gesture
 int *read_config_file(){
     /* Config int[] format
@@ -106,6 +105,8 @@ int *read_config_file(){
     }
     if(configs[3] < 3)
         return NULL;
+    free(line);
+    fclose(conf_file);
     return configs;
 }
 
@@ -121,6 +122,7 @@ void process_config_file(int *configs){
   config_struct->Fuel_tank_capacity = configs[8];
 }
 
+//Debug
 void print_config_file(){
     printf("%d\n", config_struct->T_units_second);
     printf("%d\n", config_struct->lap_distance);

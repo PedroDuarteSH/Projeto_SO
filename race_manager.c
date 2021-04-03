@@ -72,6 +72,7 @@ int process_command(char *line){
     if (strcmp(line, "START RACE!") == 0){
         if (verify_teams() == TRUE){
             start_race();
+            free(command);
             return TRUE;
         }
         else print("CANNOT START, NOT ENOUGH TEAMS");
@@ -83,6 +84,8 @@ int process_command(char *line){
         print(concat("WRONG COMMAND => ", line));
         //return INVALID_COMMAND;
     }
+    free(command);
+    
     return FALSE;
 }
 
@@ -117,6 +120,7 @@ int add_car(char *line){
     team_cars[t->number_team_cars++] = car_shmid;
     shmdt(team_cars);
     shmdt(c);
+    free(line_splited);
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
     return CAR_ADDED;
     //Car added successfully

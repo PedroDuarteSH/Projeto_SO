@@ -37,6 +37,7 @@ void team_manager_init(){
         pthread_join(cars[i],NULL); //Wait for car threads to finish
     }
     //print(concat("Dead team: ", this_team->name));
+    free(cars);
     exit(0);
 }
 
