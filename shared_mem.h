@@ -5,6 +5,9 @@
 
 #define MAX_SIZE 30
 
+#define EMPTY -1
+
+
 //Box status
 #define FREE 0
 #define BUSY 1
@@ -85,7 +88,7 @@ int shm_id;
 race *race_struct;
 config *config_struct;
 shr_memory *shm_struct;
-team **teams;
+int *teams;
 
 pid_t race_manager_process;
 pid_t malfunction_manager_process;
