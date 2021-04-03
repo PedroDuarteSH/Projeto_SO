@@ -24,11 +24,53 @@ void gen_shared_memory(){
   }
   race_struct = shmat(shm_struct->race_shmid, NULL, 0);
 
-
   //semaphore init
   sem_init(&race_struct->race_begin, 1, 0);
   sem_init(&race_struct->teams_ready, 1, 0);
 }
+
+void clean(){
+  if(shm_id < 0)
+    return;
+  teams = shmat(race_struct->teams_shmid, NULL, 0);  
+  for (int i = 0; i < config_struct->number_of_teams; i++){
+    if(teams[i] != EMPTY){
+      team *t = shmat(teams[i], NULL, 0);
+      if(t->cars_shmid >= 0){
+        int * team_cars = shmat(t->cars_shmid, NULL, 0);
+        for (int i = 0; i < t->number_team_cars; i++){
+          if(t >= 0)
+            shmctl(team_cars[i], IPC_RMID, NULL);
+        }
+      }
+      shmctl(t->cars_shmid, IPC_RMID, NULL);
+      shmdt(t);
+      shmctl(teams[i], IPC_RMID, NULL);
+    }
+  }
+  if(shm_struct->race_shmid >= 0){
+    sem_destroy(&race_struct->teams_ready);
+    sem_destroy(&race_struct->race_begin);
+    shmdt(race_struct);
+    shmctl(shm_struct->race_shmid, IPC_RMID, NULL);
+  }  
+
+  if(shm_struct->config_shmid >= 0){
+    shmdt(config_struct);
+    shmctl(shm_struct->config_shmid, IPC_RMID, NULL);
+  }
+  if(shm_struct->race_shmid >= 0){
+    sem_destroy(&race_struct->teams_ready);
+    sem_destroy(&race_struct->race_begin);
+    shmdt(race_struct);
+    shmctl(shm_struct->race_shmid, IPC_RMID, NULL);
+  }
+  fclose(shm_struct->log_file);
+  sem_destroy(&shm_struct->log_sem);
+  shmdt(shm_struct);
+  shmctl(shm_id, IPC_RMID, NULL);
+}
+
 
 //Config file gesture
 int *read_config_file(){

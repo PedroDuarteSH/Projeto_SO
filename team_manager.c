@@ -44,8 +44,8 @@ void team_manager_init(){
 void attach_update_team_shm(int i){
     shm_struct = shmat(shm_id, NULL, 0);
     race_struct = shmat(shm_struct->race_shmid, NULL, 0);
-    team **teams = shmat(race_struct->teams_shmid, NULL, 0);
-    this_team = teams[i];
+    int *teams = shmat(race_struct->teams_shmid, NULL, 0);
+    this_team = shmat(teams[i], NULL, 0);
     shmdt(teams);
 }
 
