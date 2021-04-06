@@ -1,3 +1,6 @@
+//Joao Fernandes 2019220273
+//Pedro Henriques 2019217793
+
 //Começa a corrida e acaba
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager

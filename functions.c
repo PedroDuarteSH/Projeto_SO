@@ -1,3 +1,6 @@
+//Joao Fernandes 2019220273
+//Pedro Henriques 2019217793
+
 #include "functions.h"
 #include "shared_mem.h"
 #include <time.h>

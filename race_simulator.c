@@ -1,3 +1,6 @@
+//Joao Fernandes 2019220273
+//Pedro Henriques 2019217793
+
 #include "race_simulator.h"
 //Main file
 //Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.

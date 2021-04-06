@@ -1,3 +1,6 @@
+//Joao Fernandes 2019220273
+//Pedro Henriques 2019217793
+
 #ifndef functions   /* Include guard */
 #define functions
 
