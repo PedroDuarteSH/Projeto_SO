@@ -4,6 +4,20 @@
 #ifndef shared_mem   /* Include guard */
 #define shared_mem
 
+//imports 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <fcntl.h>
+
+
 #define debug
 
 
@@ -11,7 +25,8 @@
 
 #define MAX_SIZE 30
 
-#define EMPTY -1
+#define EMPTY 0
+#define CREATED 1
 
 
 //Box status
@@ -33,18 +48,7 @@
 #define INPUT_LENGHT 200
 #define SMALL_STR_LENGHT 10
 
-//imports 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <semaphore.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/wait.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <fcntl.h>
+
 
 
 typedef struct config{
@@ -64,6 +68,8 @@ typedef struct race{
 }race;
 
 typedef struct team{
+    int initiated;
+    int team_number;
     char name[MAX_SIZE]; 
     int box_status;
     int number_team_cars;

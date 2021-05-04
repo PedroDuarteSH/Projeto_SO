@@ -9,8 +9,10 @@
 #include "functions.h"
 #include "race_manager.h"
 
-
-
+void init_program(int *configs);
+void init_log();
+void create_named_pipe(char *name);
+void print_statistics();
 //Usefull information
 /* Config int[] format
     0 - T_units_second;

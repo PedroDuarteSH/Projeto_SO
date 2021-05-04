@@ -5,20 +5,6 @@
 #include "shared_mem.h"
 #include <time.h>
 
-//Generates and attach to this process the shared memory struture
-void init_program(int *configs){
-  //Generate global structure shared memory
-  int shared_mem_size = sizeof(race) + sizeof(team) * config_struct->number_of_teams + sizeof(car) * config_struct->number_of_teams * config_struct->max_cars_team;
-  if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | 0777)) < 1){
-    perror("Error in shmget with IPC_CREAT\n");
-    exit(1);
-  }
-
-  //Race Semaphore Init
-  sem_init(&race_begin, 1, 0);
-  sem_init(&teams_ready, 1, 0);
-}
-
 void clear_resources(){
   if(getpid() == start_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
@@ -101,11 +87,7 @@ void print_config_file(){
     printf("%d\n", config_struct->Fuel_tank_capacity);
 }
 
-//Log management
-void init_log(){
-  log = fopen("log.txt", "w");
-  sem_init(&log_semaphore, 1, 1);
-}
+
 
 void print(char *result){
     char time_str[20];

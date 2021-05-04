@@ -9,7 +9,7 @@
 #include "functions.h"
 #include "team_manager.h"
 
-
+race * race_data;
 //Functions declarations
 //race manager initiation
 void race_manager_init();

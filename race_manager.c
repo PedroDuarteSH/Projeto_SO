@@ -7,6 +7,11 @@
 #include "race_manager.h"
 
 
+#define READ_BUFF 512
+race *race_struct;
+int created_teams = -1;
+
+
 void race_manager_init(){
     attach_update_race_shm();
 
@@ -14,57 +19,44 @@ void race_manager_init(){
     print_config_file();
 #endif
 
-    //avisar o semaforo que a corrida
-    //ler o ficheiro / Receber namedPipe
-    FILE *cars_file = fopen("cars.temp", "r");
+    char line[READ_BUFF];
+    int named_pipe, readed_chars;
+    if ((named_pipe = open(PIPENAME, O_RDONLY)) < 0){
+        print("Cannot open pipe for reading in race_manager");
+        exit(0);
+    }
 
-    char *line = malloc(sizeof(char) * INPUT_LENGHT);
-    char *command = malloc(sizeof(char) * INPUT_LENGHT);
-    int game_started = FALSE;
     while (TRUE){
-        fgets(line, INPUT_LENGHT, cars_file);
-        if (game_started == FALSE){
-            game_started = process_command(line);
-            sleep(0);
+        if((readed_chars = read(named_pipe, line, READ_BUFF)) == -1)
+            perror("Error reding from named pipe: ");
+        line[readed_chars-1] = '\0';
+        if (race_struct->status == FALSE){
+            race_struct->status = process_command(line);
         }
         else{
 
-
-            break;
         }
     }
-    free(command);
     free(line);
     //espera todas as equipas terminarem
-    for (int i = 0; i < config_struct->number_of_teams; i++){
-            wait(NULL);
-    }
-    //Espera que o setup das equipas esteja feito
-    //Começa a Corrida
-    //pid_t new_team;
-    //Incia Carros
-    /*
-    for(int i = 0;i < 2;i++){ //mudar o 2
-        new_team = fork();
-        if(new_team == 0){
-          team_manager();
-       }
-    }*/
+    for (int i = 0; i < config_struct->number_of_teams; i++) wait(NULL);
+    
+
 }
 
 void attach_update_race_shm(){
     //first 3 lines wasn't needed (already attached in father process)
-    shm_struct = shmat(shm_id, NULL, 0);
-    config_struct = shmat(shm_struct->config_shmid, NULL, 0);
-    race_struct = shmat(shm_struct->race_shmid, NULL, 0);
-    //iniciar equipas
-    if ((race_struct->teams_shmid = shmget(IPC_PRIVATE, sizeof(int) * config_struct->number_of_teams, IPC_CREAT | 0777)) < 1){
-        print("Error in shmget with IPC_CREAT creating teams array");
-        exit(1);
+    if((race_struct = (int *) shmat(shm_id, NULL, 0)) == (int *)-1){
+        print("Error attaching shared memory in race_manager process");
+        exit(0);
     }
-    teams = shmat(race_struct->teams_shmid, NULL, 0);
-    for (int i = 0; i < config_struct->number_of_teams; i++)
-        teams[i] = EMPTY;
+    race_struct->status = -1;
+    team *temp_team = (team *)(race_struct + 1);
+    for (int i = 0; i < config_struct->number_of_teams; i++){
+        temp_team->initiated = EMPTY;
+        team *temp_team = (team *)(temp_team + 1);
+    }
+    
 }
 
 int process_command(char *line){
@@ -85,7 +77,6 @@ int process_command(char *line){
     }
     else{
         print(concat("WRONG COMMAND => ", line));
-        //return INVALID_COMMAND;
     }
     free(command);
     
@@ -100,33 +91,29 @@ int add_car(char *line){
         return INVALID_COMMAND; //Wrong command
     }
     free(temp);
-    team *t;
-    if((t = find_team(line_splited[2])) == NULL){
+    team * car_team;
+    
+    if((car_team = find_team(line_splited[2])) == NULL){
         #ifdef debug
         print(concat("ERROR FINDING TEAM =>", line));
         #endif//Unable to find the team
         return CANT_ADD_TEAM;
     }
-    int car_shmid;
-    if ((car_shmid = shmget(IPC_PRIVATE, sizeof(car) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
-        perror("Error in shmget with IPC_CREAT\n");
-        exit(1);
-    }
-    //Attach team cars array
-    int *team_cars = shmat(t->cars_shmid, NULL, 0);
-    //Attach car
-    car *c = shmat(car_shmid, NULL, 0);
-    c->number = strtol(line_splited[4], &temp, 10);
-    c->speed = strtol(line_splited[6], &temp, 10);
-    c->consumption = strtof(line_splited[8], &temp);
-    c->reliability = strtol(line_splited[10], &temp, 10);
-    team_cars[t->number_team_cars++] = car_shmid;
-    shmdt(team_cars);
-    shmdt(c);
+
+    car * car_to_add = find_car_pos(car_team->team_number);
+
+    car_to_add->number = strtol(line_splited[4], &temp, 10);
+    car_to_add->speed = strtol(line_splited[6], &temp, 10);
+    car_to_add->consumption = strtof(line_splited[8], &temp);
+    car_to_add->reliability = strtol(line_splited[10], &temp, 10);
+
     free(line_splited);
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
     return CAR_ADDED;
-    //Car added successfully
+}
+
+car * find_car_pos(team *car_team){
+    return (race_struct + 1 + config_struct->number_of_teams + car_team->team_number * config_struct->number_of_teams + car_team->number_team_cars);
 }
 
 int verify_car_command(char *line, char ** line_splited){
@@ -147,54 +134,46 @@ int verify_car_command(char *line, char ** line_splited){
 }
 
 team *find_team(char *team_name){
-    int i = 0;
-    for (i = 0; i < config_struct->number_of_teams; i++){
-        team *t = shmat(teams[i], NULL, 0);
-        if(teams[i] == EMPTY){
-            return(create_team((char *)team_name, (int)i));
+    team *temp_team = (team *)(race_struct + 1);
+    for (int i = 0; i < config_struct->number_of_teams; i++){
+        if(temp_team->initiated == EMPTY){
+            return(create_team(temp_team, team_name,  i));
         }
-        else if(strcmp(t->name, team_name) == 0) return t;   
+        else if(strcmp(temp_team->name, team_name) == 0) return temp_team;   
+        team *temp_team = (team *)(temp_team + 1);
     }
     return NULL;
 }
 
-team *create_team(char *team_name, int i){
-    int team_id;
-    if ((team_id = shmget(IPC_PRIVATE, sizeof(team), IPC_CREAT | 0777)) < 1){
-        perror("Error in shmget with IPC_CREAT\n");
-        exit(1);
+team *create_team(team* team_struct, char *team_name, int team_number){
+    strcpy(team_struct->name, team_name); 
+    team_struct->number_team_cars = 0;
+    team_struct->box_status = FREE;
+    team_struct->team_number = team_number;
+    if(fork() == 0){
+        print(concat("CREATING TEAM !", team_name));
+        team_manager_start(team_number);
     }
-    teams[i] = team_id;
-    team *t = shmat(team_id, NULL, 0);
-    if ((t->cars_shmid = shmget(IPC_PRIVATE, sizeof(int) * config_struct->max_cars_team, IPC_CREAT | 0777)) < 1){
-        perror("Error in shmget with IPC_CREAT\n");
-        exit(1);
-    }
-    strcpy(t->name, team_name); 
-    t->number_team_cars = 0;
-    t->box_status = FREE;
-    pid_t new_team;
-    new_team = fork();
-    if(new_team == 0){
-        print(concat("Creating team ", team_name));
-        team_manager_start(i);
-    }
-    return t;
+
+    team_struct->initiated = CREATED;
+    return team_struct;
 }
 
 void start_race(){
     for (int i = 0; i < config_struct->number_of_teams; i++){
-        sem_wait(&race_struct->teams_ready);
+        sem_wait(&teams_ready);
     }
     print("STARTING RACE...");
     for (int i = 0; i < config_struct->number_of_teams + 1; i++)
-        sem_post(&race_struct->race_begin);    
+        sem_post(&race_begin);    
 }
 
 int verify_teams(){
+    team *temp_team = (team *)(race_struct + 1);
     for (int i = 0; i < config_struct->number_of_teams; i++){
-        if (teams[i] == EMPTY)
+        if (temp_team->initiated == EMPTY)
             return FALSE;
+        team *temp_team = (team *)(temp_team + 1);
     }
     return TRUE;
 }

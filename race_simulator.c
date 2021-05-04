@@ -6,9 +6,9 @@
 
 
 int main(){
-  //Gestão de sinais
-  signal(SIGINT, clear_resources);
-  //signal(SIGTSTP, print_statistics);
+  //Ignora o sinal SIG_INT até fazer todas as inicializações
+  signal(SIGINT, SIG_IGN);
+  
   //Save Process Pid to clean it
   start_pid = getpid();
   //Make shm_id as -1 to know that is not created
@@ -23,11 +23,12 @@ int main(){
   
   //generate the shared memory and control mechanisms
   init_program(configs);
+  free(configs);
   init_log();
 
+  //Create Named Pipe
+  create_named_pipe(PIPENAME);
 
-  print("Initiated_program!\n");
-  free(configs);
 
   //Updates the config struct with file configs
   pid_t race_manager_process = fork();
@@ -46,20 +47,45 @@ int main(){
     exit(0);
   }
 
-  //Create Named Pipe
-  create_named_pipe(PIPENAME);
-
-
-  print("Finished\n");
+  //Gestão de sinais
+  signal(SIGINT, clear_resources);
+  signal(SIGTSTP, print_statistics);
   
-  clean();
-
-  print("Limpo\n");
+  while(1){
+    pause();
+  }
 }
 
+//Generates the shared memory struture
+void init_program(int *configs){
+  //Generate global structure shared memory
+  int shared_mem_size = sizeof(race) + sizeof(team) * config_struct->number_of_teams + sizeof(car) * config_struct->number_of_teams * config_struct->max_cars_team;
+  if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | 0777)) < 1){
+    perror("Error in shmget with IPC_CREAT\n");
+    exit(1);
+  }
+
+  //Race Semaphore Init
+  sem_init(&race_begin, 1, 0);
+  sem_init(&teams_ready, 1, 0);
+}
+
+//Log management
+void init_log(){
+  log = fopen("log.txt", "w");
+  sem_init(&log_semaphore, 1, 1);
+}
+
+//Create Named pipe
 void create_named_pipe(char *name){
-  if ((mkfifo(PIPENAME, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
+  if ((mkfifo(name, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
     perror("Cannot create named pipe: ");
     exit(0);
   }
 }
+
+void print_statistics(){
+
+
+}
+

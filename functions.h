@@ -15,8 +15,6 @@
 
 
 //Functions declarations
-//Memory first creation
-void init_program(int *configs);
 void clear_resources();
 //Config file gesture
 int *read_config_file();
@@ -28,7 +26,6 @@ char * concat (char *s1, char *s2);
 void strip(char *phrase);
 
 //Log_writing
-void init_log();
 void print(char *result);
 
 //Usefull information
