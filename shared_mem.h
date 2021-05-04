@@ -6,6 +6,9 @@
 
 #define debug
 
+
+#define PIPENAME "CARS"
+
 #define MAX_SIZE 30
 
 #define EMPTY -1
@@ -41,14 +44,8 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <fcntl.h>
 
-//structs
-typedef struct shr_memory{
-    int config_shmid; //Config struct
-    int race_shmid; //Race struct
-    sem_t log_sem; //Log Posix semaphore to control log input
-    FILE *log_file; //Log File address to doesn't open file every time
-}shr_memory;
 
 typedef struct config{
     int  T_units_second;
@@ -64,21 +61,18 @@ typedef struct config{
 
 typedef struct race{
     int status; //Started, ended, interruped, 
-    int teams_shmid;//Array in shared memory with team structs address
-    sem_t race_begin;
-    sem_t teams_ready;
 }race;
 
 typedef struct team{
     char name[MAX_SIZE]; 
     int box_status;
     int number_team_cars;
-    int cars_shmid;//Array in shared memory with team structs address
     sem_t modify_team;
 }team;
 
 typedef struct car{
     int number;
+    int team;
     int state;
     float consumption;
     int speed;
@@ -87,13 +81,25 @@ typedef struct car{
 }car;
 
 //Vars
-int shm_id;
-race *race_struct;
-config *config_struct;
-shr_memory *shm_struct;
-int *teams;
+//Main PID
+pid_t start_pid;
 
-pid_t race_manager_process;
-pid_t malfunction_manager_process;
-//Public declared functions
+//Shared memory id
+int shm_id;
+
+
+config *config_struct;
+
+
+sem_t race_begin;
+sem_t teams_ready;
+
+
+//Log file management
+FILE *log;
+sem_t log_semaphore;
+
+
+
+
 #endif

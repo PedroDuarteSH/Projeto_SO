@@ -2,58 +2,64 @@
 //Pedro Henriques 2019217793
 
 #include "race_simulator.h"
-//Main file
-//Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
 
-/* TO DO
-● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
-● Inicia	o	processo	Gestor	de	Corrida
-● Inicia	o	processo	Gestor	de	Avarias
-● Captura	o	sinal	SIGTSTP e	imprime	estatísticas
-● Captura	o	sinal	SIGINT	para	terminar a	corrida	e	o	programa.	Ao	receber	este	sinal,	
-deve	 aguardar	 que	 todos	 os	 carros	 cruzem	 a	meta	 (mesmo	 que	 não	 seja	 a	 sua	
-última	volta)	- os	carros	que	se	encontram	na	box	no	momento	da	instrução	devem	
-terminar.	 Após	 todos	 os	 carros	 concluírem	 a	 corrida,	 deverá	 imprimir	 as	
-estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*/
 
-/* DONE
-● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
-*/
 
 int main(){
+  //Gestão de sinais
+  signal(SIGINT, clear_resources);
+  //signal(SIGTSTP, print_statistics);
+  //Save Process Pid to clean it
+  start_pid = getpid();
+  //Make shm_id as -1 to know that is not created
+  shm_id = -1;
+
+
   //read config file
   int *configs = NULL;
   configs = read_config_file();
-  if (configs == NULL)
-    printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
-  
-  //generate the shared memory
-  gen_shared_memory();
-  init_log();
-  print("Initiated_program!");
-
+  if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
+  
+  //generate the shared memory and control mechanisms
+  init_program(configs);
+  init_log();
+
+
+  print("Initiated_program!\n");
+  free(configs);
+
   //Updates the config struct with file configs
-  race_manager_process = fork();
+  pid_t race_manager_process = fork();
   if(race_manager_process == 0){
     print("Starting race process manager...");
     //RACE MANAGER PROCESS
     race_manager_init();
     exit(0);
   }
-  malfunction_manager_process = fork();
+  pid_t malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
     print("Created Malfuntion process");
-    sem_wait(&race_struct->race_begin);
+    sem_wait(&race_begin);
     print("Malfuntion process initiated");
     //MALFUNCTION PROCESS
     exit(0);
   }
-  wait(NULL);
-  wait(NULL);
-  print("Finished");
-  free(configs);
+
+  //Create Named Pipe
+  create_named_pipe(PIPENAME);
+
+
+  print("Finished\n");
+  
   clean();
 
-  print("Limpo");
+  print("Limpo\n");
+}
+
+void create_named_pipe(char *name){
+  if ((mkfifo(PIPENAME, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
+    perror("Cannot create named pipe: ");
+    exit(0);
+  }
 }

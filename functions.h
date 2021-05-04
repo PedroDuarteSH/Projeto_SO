@@ -14,12 +14,10 @@
 #define number_of_configs 9
 
 
-//Structs
-
 //Functions declarations
 //Memory first creation
-void gen_shared_memory();
-
+void init_program(int *configs);
+void clear_resources();
 //Config file gesture
 int *read_config_file();
 void print_config_file();
@@ -28,9 +26,9 @@ void process_config_file(int *configs);
 //String auxiliar
 char * concat (char *s1, char *s2);
 void strip(char *phrase);
+
 //Log_writing
 void init_log();
-void global_init_log(FILE *input_log_file, sem_t input_log_sem);
 void print(char *result);
 
 //Usefull information
