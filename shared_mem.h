@@ -27,7 +27,7 @@
 
 #define MAX_SIZE 30
 
-#define EMPTY 0
+#define EMPTY -1
 #define CREATED 1
 
 //Race management
@@ -115,6 +115,9 @@ FILE *log_file;
 sem_t *log_semaphore;
 
 
+
 race *race_struct;
+
+int *car_pipes[2];
 
 #endif

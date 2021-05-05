@@ -27,6 +27,7 @@ void clear_resources(){
   #endif
       }
     sem_unlink(LOG_SEM_NAME);
+    unlink(PIPENAME);
     fclose(log_file);
   }
   exit(0);

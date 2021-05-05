@@ -14,20 +14,15 @@ int main(){
   //Make shm_id as -1 to know that is not created
   shm_id = -1;
 
-  printf("Started\n");
-  fflush(stdout);
   //read config file
   int *configs = NULL;
   configs = read_config_file();
   if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
   
-  printf("Started\n");
-  fflush(stdout);
   //generate the shared memory and control mechanisms
   init_program();
-  printf("Started\n");
-  fflush(stdout);
+
   free(configs);
   init_log();
 
@@ -39,12 +34,14 @@ int main(){
   pid_t race_manager_process = fork();
   if(race_manager_process == 0){
     print("Starting race process manager...");
+    signal(SIGINT, clear_resources);
     //RACE MANAGER PROCESS
     race_manager_init();
     exit(0);
   }
   pid_t malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
+    signal(SIGINT, clear_resources);
     print("Created Malfuntion process");
     sem_wait(&race_struct->race_begin);
     print("Malfuntion process initiated");
@@ -75,13 +72,19 @@ void init_program(){
       exit(0);
   }
 
-
   race_struct->status = NOT_STARTED;
   team *temp_team = (team *)(race_struct + 1);
   for (int i = 0; i < config_struct->number_of_teams; i++){
     temp_team->initiated = EMPTY;
     team *temp_team = (team *)(temp_team + 1);
   }
+  car *current_car = (car *)temp_team;
+  for (int i = 0; i < config_struct->number_of_teams * config_struct->max_cars_team; i++){
+    current_car->comunication_pipe[0] = EMPTY;
+    current_car->comunication_pipe[1] = EMPTY;
+    car *current_car = (car *)(current_car + 1);
+  }
+
   //Race Semaphores Init
   sem_init(&race_struct->race_begin, 1, 0);
   sem_init(&race_struct->teams_ready, 1, 0);

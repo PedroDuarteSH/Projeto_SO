@@ -5,16 +5,16 @@
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
 #include "race_manager.h"
-
-
 #define READ_BUFF 512
+
 
 void race_manager_init(){
 
 #ifdef DEBUG
     print_config_file();
+    fflush(stdout);
 #endif
-
+    
     char line[READ_BUFF];
     int named_pipe, readed_chars;
     if ((named_pipe = open(PIPENAME, O_RDONLY)) < 0){
@@ -38,6 +38,17 @@ void race_manager_init(){
     //espera todas as equipas terminarem
     for (int i = 0; i < config_struct->number_of_teams; i++) wait(NULL);
 
+}
+
+void create_pipes(){
+    car * car_imp = (car *) (race_struct + 1 + config_struct->number_of_teams);
+    for (int i = 0; i < config_struct->number_of_teams * config_struct->max_cars_team; i++){
+        if(pipe(car_imp->comunication_pipe) == -1){
+            print("Error creating temp pipe");
+		    clear_resources();
+        }
+    }
+    
 }
 
 int process_command(char *line){
@@ -75,7 +86,7 @@ int add_car(char *line){
     
     team * car_team;
     if((car_team = find_team(line_splited[2])) == NULL){
-        #ifdef debug
+        #ifdef DEGUB
         print(concat("ERROR FINDING TEAM =>", line));
         #endif
         return CANT_ADD_TEAM;
@@ -89,10 +100,6 @@ int add_car(char *line){
     car_to_add->reliability = strtol(line_splited[10], &temp, 10);
 
     //Create Unnamed Car Pipe
-    if(pipe(car_to_add->comunication_pipe) == -1){
-		print("Error creating temp pipe");
-		clear_resources();
-	}
     free(line_splited);
     car_team->number_team_cars++;
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
