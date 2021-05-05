@@ -8,14 +8,10 @@
 
 
 #define READ_BUFF 512
-race *race_struct;
-int created_teams = -1;
-
 
 void race_manager_init(){
-    attach_update_race_shm();
 
-#ifdef debug
+#ifdef DEBUG
     print_config_file();
 #endif
 
@@ -23,14 +19,15 @@ void race_manager_init(){
     int named_pipe, readed_chars;
     if ((named_pipe = open(PIPENAME, O_RDONLY)) < 0){
         print("Cannot open pipe for reading in race_manager");
-        exit(0);
+        clear_resources();
     }
 
+    //IMPLEMENTAR SELECT
     while (TRUE){
         if((readed_chars = read(named_pipe, line, READ_BUFF)) == -1)
             perror("Error reding from named pipe: ");
         line[readed_chars-1] = '\0';
-        if (race_struct->status == FALSE){
+        if (race_struct->status == NOT_STARTED){
             race_struct->status = process_command(line);
         }
         else{
@@ -40,23 +37,7 @@ void race_manager_init(){
     free(line);
     //espera todas as equipas terminarem
     for (int i = 0; i < config_struct->number_of_teams; i++) wait(NULL);
-    
 
-}
-
-void attach_update_race_shm(){
-    //first 3 lines wasn't needed (already attached in father process)
-    if((race_struct = (int *) shmat(shm_id, NULL, 0)) == (int *)-1){
-        print("Error attaching shared memory in race_manager process");
-        exit(0);
-    }
-    race_struct->status = -1;
-    team *temp_team = (team *)(race_struct + 1);
-    for (int i = 0; i < config_struct->number_of_teams; i++){
-        temp_team->initiated = EMPTY;
-        team *temp_team = (team *)(temp_team + 1);
-    }
-    
 }
 
 int process_command(char *line){
@@ -91,29 +72,35 @@ int add_car(char *line){
         return INVALID_COMMAND; //Wrong command
     }
     free(temp);
-    team * car_team;
     
+    team * car_team;
     if((car_team = find_team(line_splited[2])) == NULL){
         #ifdef debug
         print(concat("ERROR FINDING TEAM =>", line));
-        #endif//Unable to find the team
+        #endif
         return CANT_ADD_TEAM;
     }
 
-    car * car_to_add = find_car_pos(car_team->team_number);
+    car * car_to_add = find_car_pos(car_team);
 
     car_to_add->number = strtol(line_splited[4], &temp, 10);
     car_to_add->speed = strtol(line_splited[6], &temp, 10);
     car_to_add->consumption = strtof(line_splited[8], &temp);
     car_to_add->reliability = strtol(line_splited[10], &temp, 10);
 
+    //Create Unnamed Car Pipe
+    if(pipe(car_to_add->comunication_pipe) == -1){
+		print("Error creating temp pipe");
+		clear_resources();
+	}
     free(line_splited);
+    car_team->number_team_cars++;
     print(concat("CAR ADDED SUCCESSFULLY => ", line));
     return CAR_ADDED;
 }
 
 car * find_car_pos(team *car_team){
-    return (race_struct + 1 + config_struct->number_of_teams + car_team->team_number * config_struct->number_of_teams + car_team->number_team_cars);
+    return (car *)(race_struct + 1 + config_struct->number_of_teams + 1 + car_team->team_number * config_struct->max_cars_team + car_team->number_team_cars);
 }
 
 int verify_car_command(char *line, char ** line_splited){
@@ -161,11 +148,11 @@ team *create_team(team* team_struct, char *team_name, int team_number){
 
 void start_race(){
     for (int i = 0; i < config_struct->number_of_teams; i++){
-        sem_wait(&teams_ready);
+        sem_wait(&race_struct->teams_ready);
     }
     print("STARTING RACE...");
     for (int i = 0; i < config_struct->number_of_teams + 1; i++)
-        sem_post(&race_begin);    
+        sem_post(&race_struct->race_begin);    
 }
 
 int verify_teams(){

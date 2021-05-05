@@ -15,10 +15,12 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 
 
-#define debug
+#define DEBUG
 
 
 #define PIPENAME "CARS"
@@ -27,6 +29,11 @@
 
 #define EMPTY 0
 #define CREATED 1
+
+//Race management
+#define NOT_STARTED 0
+#define STARTED 1
+#define INTERRUPTED 2
 
 
 //Box status
@@ -64,7 +71,9 @@ typedef struct config{
 }config;
 
 typedef struct race{
-    int status; //Started, ended, interruped, 
+    int status; //Started, ended, interruped
+    sem_t race_begin;
+    sem_t teams_ready;
 }race;
 
 typedef struct team{
@@ -78,17 +87,18 @@ typedef struct team{
 
 typedef struct car{
     int number;
-    int team;
+    int team_number;
     int state;
     float consumption;
     int speed;
     int reliability;
     int current_fuel;
+    int comunication_pipe[2];
 }car;
 
 //Vars
 //Main PID
-pid_t start_pid;
+pid_t main_pid;
 
 //Shared memory id
 int shm_id;
@@ -97,15 +107,14 @@ int shm_id;
 config *config_struct;
 
 
-sem_t race_begin;
-sem_t teams_ready;
+
 
 
 //Log file management
-FILE *log;
-sem_t log_semaphore;
+FILE *log_file;
+sem_t *log_semaphore;
 
 
-
+race *race_struct;
 
 #endif

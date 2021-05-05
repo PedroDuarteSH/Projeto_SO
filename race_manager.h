@@ -9,7 +9,6 @@
 #include "functions.h"
 #include "team_manager.h"
 
-race * race_data;
 //Functions declarations
 //race manager initiation
 void race_manager_init();
@@ -26,8 +25,9 @@ int process_command(char *line);
             team *find_team(char *team_name);//find the team with same name
             //if same name returns team Address
             //if can create team
-                team *create_team(char *team_name, int i);
+                team *create_team(team* team_struct, char *team_name, int team_number);
             //else return FALSE
+            car * find_car_pos(team *car_team);
     //if start race:
         int verify_teams();//Verifies if enough teams are created
         //if verify teams == true

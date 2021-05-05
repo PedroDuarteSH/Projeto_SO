@@ -6,19 +6,30 @@
 #include <time.h>
 
 void clear_resources(){
-  if(getpid() == start_pid){
+  
+  //Terminar semaforos no processo
+  sem_destroy(&race_struct->teams_ready);
+  sem_destroy(&race_struct->race_begin);
+
+
+  sem_close(log_semaphore);
+  
+  if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
     wait(NULL); 
     wait(NULL);
-  }
-  //Terminar semaforos no processo
-  sem_destroy(&teams_ready);
-  sem_destroy(&race_begin);
-  if(shm_id >= 0)
-    shmctl(shm_id, IPC_RMID, NULL);
 
-  fclose(log);
-  sem_destroy(&log_semaphore);
+    //Eliminar memória partilhada
+    if(shm_id >= 0)
+      if(shmctl(shm_id, IPC_RMID, NULL) == -1){
+  #ifdef DEBUG
+        print("Erro a remover memória partilhada");
+  #endif
+      }
+    sem_unlink(LOG_SEM_NAME);
+    fclose(log_file);
+  }
+  exit(0);
 }
 
 //Config file gesture
@@ -71,7 +82,6 @@ void process_config_file(int *configs){
   config_struct->T_Box_min = configs[6];
   config_struct->T_Box_Max = configs[7];
   config_struct->Fuel_tank_capacity = configs[8];
-  return config_struct;
 }
 
 //Debug
@@ -97,12 +107,12 @@ void print(char *result){
 
     strftime(time_str, 20, "%H:%M:%S", tm_info);
 
-    sem_wait(&log_semaphore);
-    fprintf(log, "%s:%s\n",time_str,result);
+    sem_wait(log_semaphore);
+    fprintf(log_file, "%s:%s\n",time_str,result);
     printf("%s:%s\n",time_str,result);
-    fflush(log);
+    fflush(log_file);
     fflush(stdout);
-    sem_post(&log_semaphore);
+    sem_post(log_semaphore);
 }
 
 

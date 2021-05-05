@@ -13,6 +13,7 @@
 #define line_lenght 20
 #define number_of_configs 9
 
+#define LOG_SEM_NAME "log_semaphore"
 
 //Functions declarations
 void clear_resources();
