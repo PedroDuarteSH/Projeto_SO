@@ -24,7 +24,7 @@ void race_manager_init(){
     fd_set read_set;
     while (TRUE){
         //Open Named Pipe
-        if ((named_pipe = open(PIPENAME, O_RDONLY)) < 0){
+        if ((named_pipe = open(PIPENAME, O_RDONLY | O_NONBLOCK)) < 0){
             print("Cannot open pipe for reading in race_manager");
             clear_resources();
         }
