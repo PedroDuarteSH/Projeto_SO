@@ -46,10 +46,6 @@
 #define TRUE 1
 #define FALSE 0
 
-//Car management
-#define INVALID_COMMAND 0
-#define CANT_ADD_TEAM 1
-#define CAR_ADDED 2
 
 //String siz management
 #define INPUT_LENGHT 200
