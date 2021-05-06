@@ -7,11 +7,14 @@
 
 void clear_resources(){
   
-  //Terminar semaforos no processo
+  //Destroy unnamed semaphores
   sem_destroy(&race->teams_ready);
   sem_destroy(&race->race_begin);
+  
+  //Detach shared memory from processes
+  shmdt(race);
 
-
+  //Destroy named semaphores
   sem_close(log_semaphore);
   
   if(getpid() == main_pid){
@@ -21,18 +24,23 @@ void clear_resources(){
 
     //Eliminar memória partilhada
     if(shm_id >= 0)
-      if(shmctl(shm_id, IPC_RMID, NULL) == -1){
-  #ifdef DEBUG
-        print("Erro a remover memória partilhada");
-  #endif
-      }
+      remove_shm();
+  
+
     sem_unlink(LOG_SEM_NAME);
     unlink(PIPENAME);
     fclose(log_file);
   }
   exit(0);
 }
-
+void remove_shm(){
+  if(shmctl(shm_id, IPC_RMID, NULL) == -1){
+    shmdt(race);
+#ifdef DEBUG
+    print("Erro a remover memória partilhada");
+#endif
+  }
+}
 //Config file gesture
 int *read_config_file(){
     /* Config int[] format

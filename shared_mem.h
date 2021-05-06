@@ -16,6 +16,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
+#include <sys/msg.h>
 #include <fcntl.h>
 #include <signal.h>
 
@@ -108,7 +109,7 @@ pid_t main_pid;
 //Shared memory id
 int shm_id;
 
-//
+//Message Queue ID
 int msq_id;
 
 //Struct to save config files

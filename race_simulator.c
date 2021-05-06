@@ -11,8 +11,9 @@ int main(){
   
   //Save Process Pid to clean it
   main_pid = getpid();
-  //Make shm_id as -1 to know that is not created
+  //Make IDS to know that is not created
   shm_id = -1;
+  msq_id = -1;
 
   //read config file
   int *configs = NULL;
@@ -88,9 +89,21 @@ void create_named_pipe(char *name){
   unlink(name);
   if ((mkfifo(name, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
     print("CANNOT CREATE NAMED PIPE -> EXITING\n");
+    remove_shm();
     exit(0);
   }
 }
+
+void create_msq(){
+  //Delete message queue if exists
+  msgctl(msq_id, IPC_RMID, NULL);
+  //Create message queue
+  if((msq_id = msgget(IPC_PRIVATE, IPC_CREAT|0777)) == -1){
+    print("Error creating message queue");
+    exit(0);
+  }
+}
+
 
 void print_statistics(){
 

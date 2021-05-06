@@ -5,9 +5,6 @@
 #define functions
 
 //C libraries
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "shared_mem.h"
 //User define variables
 #define line_lenght 20
@@ -17,6 +14,8 @@
 
 //Functions declarations
 void clear_resources();
+void remove_shm();
+
 //Config file gesture
 int *read_config_file();
 void print_config_file();
