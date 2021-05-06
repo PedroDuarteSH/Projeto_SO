@@ -73,13 +73,9 @@ void init_program(){
   }
 
   race_struct->status = NOT_STARTED;
-  team *temp_team = (team *)(race_struct + 1);;
-  char name[30] = NAME;
+  team *temp_team = (team *)(race_struct + 1);
   for (int i = 0; i < config->number_of_teams; i++){
     temp_team->initiated = EMPTY;
-    strcpy(temp_team->name, name); 
-    printf("%s - %d\n", temp_team->name, temp_team->initiated);
-    fflush(stdout);
     temp_team = (team *)(temp_team + 1);
   }
   car *current_car = (car *) temp_team;

@@ -19,18 +19,21 @@ void team_manager_start(team* self){
     print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
 #endif
 
-    sem_wait(&race_struct->race_begin);
+    sem_post(&race_struct->teams_ready);
+
+
+    
     car**team_cars = find_team_cars();
     
     cars = (pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
     printf("Equipa %s\n", this_team->name);
     for(int i = 0; i < this_team->number_team_cars;i++){
         //pthread_create(&cars[i],NULL,car_init,c);
-        printf("Carro %d da equipa %s pronto", team_cars[i]->number, this_team->name);
+        printf("Carro %d da equipa %s pronto\n", team_cars[i]->number, this_team->name);
     }
-
+    exit(0);
     /*
-    sem_post(&teams_ready);
+    
     //Wait for race to start
     sem_wait(&race_begin);
     
@@ -54,10 +57,11 @@ void team_manager_start(team* self){
 
 car **find_team_cars(){
     car ** team_cars = malloc(sizeof(car) * this_team->number_team_cars);
-    team_cars[0] = (car *)this_team + (config->number_of_teams - this_team->team_number) + this_team->team_number * config->max_cars_team;
-    
+    team_cars[0] = (car *)race_struct + 1 + config->number_of_teams + this_team->team_number * config->max_cars_team;
+    print(concat(this_team->name, " TEAM HAS CAR"));
     for (int i = 1; i < this_team->number_team_cars; i++){
-        team_cars[i] = (car *) team_cars[i-1] + 1;
+        team_cars[i] = (car *) (team_cars[i-1] + 1);
+        print(concat(this_team->name, " TEAM HAS CAR"));
     }
     return team_cars;
 }

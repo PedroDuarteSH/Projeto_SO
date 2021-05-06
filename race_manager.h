@@ -16,6 +16,7 @@
 //Command Helper
 #define WRONG_COMMAND "WRONG COMMAND => "
 #define CANT_ADD_TEAM "ERROR FINDING|CREATING TEAM - NO MORE SLOTS => "
+#define CAR_NUMBER_EXISTS "CAR NUMBER ALREADY EXISTS OR NO MORE TEAM SLOTS=> "
 #define CAR_ADDED "CAR ADDED SUCCESSFULLY => "
 #define RACE_STARTING "RACE IS GOING TO START!"
 #define START_ERROR "CANNOT START, NOT ENOUGH TEAMS"
@@ -39,8 +40,8 @@ char* process_command(char *line);
             //if can create team
                 team *create_team(team* team_struct, char *team_name, int team_number);
             //else return FALSE
-            car * find_car_pos(team *car_team);
-    //if start race:
+            car * find_car_pos(team *car_team, int number);
+        //if start race:
         int verify_teams();//Verifies if enough teams are created
         //if verify teams == true
             void start_race();

@@ -10,6 +10,5 @@
 //functions
 void team_manager_start(team* self);
 car ** find_team_cars();
-void attach_update_team_shm(int i);
 void *car_init(void * shm_ids);
 #endif

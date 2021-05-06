@@ -17,16 +17,7 @@ void race_manager_init(){
     
     char line[READ_BUFF];
     int named_pipe, readed_chars, car_state;
-    int max_number_cars = config->number_of_teams * config->max_cars_team;
-
-#ifdef DEBUG
-    team *temp = (team *) (race_struct+1);
-    for (int i = 0; i < config->number_of_teams; i++){
-        printf("%s - %d\n", temp->name, temp->initiated);
-        temp = temp + 1;
-    }
-#endif
-    
+    int max_number_cars = config->number_of_teams * config->max_cars_team;    
 
     create_pipes(max_number_cars);
     //Read Pipes
@@ -93,6 +84,7 @@ void create_pipes(int max_number_cars){
 
 char* process_command(char *line){
     strip(line);
+    print(concat("PROCESS COMMAND => ", line));
     char *command = malloc(sizeof(char) * INPUT_LENGHT);
     strcpy(command, line);
     strtok(command, " ");
@@ -124,15 +116,19 @@ char* add_car(char *line){
     team * car_team;
     if((car_team = find_team(line_splited[2])) == NULL) return concat(CANT_ADD_TEAM, line);
     
-    car *car_to_add = find_car_pos(car_team);
+    //Process car
     int parse_error = 0;
+    int car_number = strtol(line_splited[4], &temp, 10);
+    if (temp == line_splited[4])parse_error++;
+    car *car_to_add = find_car_pos(car_team, car_number);
+    if(car_to_add == NULL)
+        return CAR_NUMBER_EXISTS;
     //Initiate cars data
     car_to_add->team_number = car_team->team_number;
     car_to_add->state = NOTSTARTED;
     car_to_add->box_stops = 0;
     car_to_add->current_fuel = config->Fuel_tank_capacity;
-    car_to_add->number = strtol(line_splited[4], &temp, 10);
-    if (temp == line_splited[4])parse_error++;
+    car_to_add->number = car_number;
     car_to_add->speed = strtol(line_splited[6], &temp, 10);
     if (temp == line_splited[6])parse_error++;
     car_to_add->consumption = strtof(line_splited[8], &temp);
@@ -141,6 +137,7 @@ char* add_car(char *line){
     if (temp == line_splited[10])parse_error++;
 
     if(parse_error != 0){
+        car_to_add->number = EMPTY;
         if(car_team->number_team_cars == 0)
             car_team->initiated = EMPTY;
         return concat(WRONG_COMMAND, line);
@@ -153,8 +150,16 @@ char* add_car(char *line){
     return concat(CAR_ADDED, line);
 }
 
-car * find_car_pos(team *car_team){
-    return (car *)(race_struct + 1 + config->number_of_teams + 1 + car_team->team_number * config->max_cars_team + car_team->number_team_cars);
+car * find_car_pos(team *car_team, int number){
+    car * temp_car = (car *) (race_struct + 1 + config->number_of_teams + car_team->team_number * config->max_cars_team);
+    for (int i = 0; i < config->max_cars_team; i++){
+        if(temp_car->number == number)
+            return NULL;
+        else if(temp_car->number == EMPTY)
+            return temp_car;
+        temp_car++;
+    }
+    return NULL;
 }
 
 int verify_car_command(char *line, char ** line_splited){
@@ -162,9 +167,10 @@ int verify_car_command(char *line, char ** line_splited){
         line_splited[i] = NULL;
     //read command
     char* temp;
-    for (int i = 0; i < CAR_COMMAND_SIZE; i++){
-        temp = strtok_r(line, " ,\n", &line);
-        line_splited[i] = concat("", temp);
+    int index = 0;
+    while((temp = strtok_r(line, " ,\n", &line)) && index < 11){
+        line_splited[index] = concat("", temp);
+        index++;
     }
     //verify if something is NULL
     if(line_splited[CAR_COMMAND_SIZE-1] == NULL)
@@ -208,7 +214,6 @@ void start_race(){
     for (int i = 0; i < config->number_of_teams; i++){
         sem_wait(&race_struct->teams_ready);
     }
-
     //Inform cars and malfunction process that race has started
     for (int i = 0; i < config->number_of_teams + 1; i++)
         sem_post(&race_struct->race_begin);    
