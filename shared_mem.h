@@ -100,6 +100,7 @@ typedef struct car{
     int comunication_pipe[2];
 }car;
 
+
 //Vars
 //Main PID
 pid_t main_pid;
@@ -121,5 +122,6 @@ sem_t *log_semaphore;
 
 //Shared memory locations
 race *race_struct;
-
+team *first_team;
+car *first_car;
 #endif

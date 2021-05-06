@@ -61,7 +61,7 @@ int main(){
 //Generates and attach the shared memory struture
 void init_program(){
   //Generate global structure shared memory
-  int shared_mem_size = sizeof(race) + sizeof(team) * config->number_of_teams + sizeof(car) * config->number_of_teams * config->max_cars_team;
+  int shared_mem_size = sizeof(race) + (sizeof(team) * config->number_of_teams) + (sizeof(car) * config->number_of_teams * config->max_cars_team);
   if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | IPC_EXCL | 0700)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
@@ -73,15 +73,20 @@ void init_program(){
   }
 
   race_struct->status = NOT_STARTED;
-  team *temp_team = (team *)(race_struct + 1);
+  first_team = (team *)(race_struct + 1);
+  team *temp_team = first_team;
   for (int i = 0; i < config->number_of_teams; i++){
     temp_team->initiated = EMPTY;
     temp_team = (team *)(temp_team + 1);
   }
-  car *current_car = (car *) temp_team;
+  first_car = (car *)(temp_team);
+  car * temp_car = first_car;
+  int team = 0;
   for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
-    current_car->number = EMPTY;
-    car *current_car = (current_car + 1);
+    temp_car->number = EMPTY;
+    temp_car->team_number = team;
+    temp_car = (car *)(temp_car + 1);
+    if((i+1) % config->max_cars_team == 0)team++;
   }
 
   //Race Semaphores Init
@@ -106,15 +111,4 @@ void create_named_pipe(char *name){
 void print_statistics(){
 
 
-}
-
-void show_shm(){
-  printf("Showing shm (integer by integer):\n");
-  // The effect of p+n where p is a pointer and n is an integer is to compute the address equal to p plus n times the size of whatever p points to
-  int *p = (int *) race_struct;
-  for(int i=0;i<((sizeof(race) + sizeof(team) * config->number_of_teams + sizeof(car) * config->number_of_teams * config->max_cars_team)/sizeof(int));i++){
-    printf("%d  ",*(p+i));
-    if(i%2==1) printf("\n");
-  }
-  printf("\n");
 }

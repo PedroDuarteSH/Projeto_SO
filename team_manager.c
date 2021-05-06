@@ -24,14 +24,14 @@ void team_manager_start(team* self){
 
     
     car**team_cars = find_team_cars();
-    
     cars = (pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
     printf("Equipa %s\n", this_team->name);
     for(int i = 0; i < this_team->number_team_cars;i++){
         //pthread_create(&cars[i],NULL,car_init,c);
         printf("Carro %d da equipa %s pronto\n", team_cars[i]->number, this_team->name);
+        fflush(stdout);
     }
-    exit(0);
+    print(concat("TEAM ENDING ", this_team->name));
     /*
     
     //Wait for race to start
@@ -57,10 +57,10 @@ void team_manager_start(team* self){
 
 car **find_team_cars(){
     car ** team_cars = malloc(sizeof(car) * this_team->number_team_cars);
-    team_cars[0] = (car *)race_struct + 1 + config->number_of_teams + this_team->team_number * config->max_cars_team;
-    print(concat(this_team->name, " TEAM HAS CAR"));
-    for (int i = 1; i < this_team->number_team_cars; i++){
-        team_cars[i] = (car *) (team_cars[i-1] + 1);
+    car * temp_car = (car *) first_car;
+    temp_car = temp_car + config->max_cars_team * this_team->team_number;
+    for (int i = 0; i < this_team->number_team_cars; i++){
+        team_cars[i] = (car *) (temp_car);
         print(concat(this_team->name, " TEAM HAS CAR"));
     }
     return team_cars;
