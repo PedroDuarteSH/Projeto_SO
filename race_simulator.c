@@ -43,7 +43,7 @@ int main(){
   if(malfunction_manager_process == 0){
     signal(SIGINT, clear_resources);
     print("Created Malfuntion process");
-    sem_wait(&race_struct->race_begin);
+    sem_wait(&race->race_begin);
     print("Malfuntion process initiated");
     //MALFUNCTION PROCESS
     exit(0);
@@ -61,37 +61,20 @@ int main(){
 //Generates and attach the shared memory struture
 void init_program(){
   //Generate global structure shared memory
-  int shared_mem_size = sizeof(race) + (sizeof(team) * config->number_of_teams) + (sizeof(car) * config->number_of_teams * config->max_cars_team);
+  int shared_mem_size = sizeof(race) + (sizeof(team_stuct) * config->number_of_teams) + (sizeof(car_struct) * config->number_of_teams * config->max_cars_team);
   if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | IPC_EXCL | 0700)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
 
-  if((race_struct = (race *) shmat(shm_id, NULL, 0)) == (race *)-1){
+  if((race = (race_struct *) shmat(shm_id, NULL, 0)) == (race_struct *)-1){
       print("Error attaching shared memory in race_manager process");
       exit(0);
   }
 
-  race_struct->status = NOT_STARTED;
-  first_team = (team *)(race_struct + 1);
-  team *temp_team = first_team;
-  for (int i = 0; i < config->number_of_teams; i++){
-    temp_team->initiated = EMPTY;
-    temp_team = (team *)(temp_team + 1);
-  }
-  first_car = (car *)(temp_team);
-  car * temp_car = first_car;
-  int team = 0;
-  for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
-    temp_car->number = EMPTY;
-    temp_car->team_number = team;
-    temp_car = (car *)(temp_car + 1);
-    if((i+1) % config->max_cars_team == 0)team++;
-  }
-
   //Race Semaphores Init
-  sem_init(&race_struct->race_begin, 1, 0);
-  sem_init(&race_struct->teams_ready, 1, 0);
+  sem_init(&race->race_begin, 1, 0);
+  sem_init(&race->teams_ready, 1, 0);
 }
 
 //Log management
@@ -102,6 +85,7 @@ void init_log(){
 
 //Create Named pipe
 void create_named_pipe(char *name){
+  unlink(name);
   if ((mkfifo(name, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
     print("CANNOT CREATE NAMED PIPE -> EXITING\n");
     exit(0);

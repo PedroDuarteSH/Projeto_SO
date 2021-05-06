@@ -8,8 +8,8 @@
 void clear_resources(){
   
   //Terminar semaforos no processo
-  sem_destroy(&race_struct->teams_ready);
-  sem_destroy(&race_struct->race_begin);
+  sem_destroy(&race->teams_ready);
+  sem_destroy(&race->race_begin);
 
 
   sem_close(log_semaphore);

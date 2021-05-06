@@ -35,12 +35,12 @@ char* process_command(char *line);
     char* add_car(char *line);
         int verify_car_command(char *line, char ** line_splited);
         //If verify_car_command == true (Valid command), keeps adding
-            team *find_team(char *team_name);//find the team with same name
+            team_stuct *find_team(char *team_name);//find the team with same name
             //if same name returns team Address
             //if can create team
-                team *create_team(team* team_struct, char *team_name, int team_number);
+                team_stuct *create_team(team_stuct* team_struct, char *team_name, int team_number);
             //else return FALSE
-            car * find_car_pos(team *car_team, int number);
+            car_struct * find_car_pos(team_stuct *car_team, int number);
         //if start race:
         int verify_teams();//Verifies if enough teams are created
         //if verify teams == true

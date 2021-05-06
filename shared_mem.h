@@ -73,22 +73,22 @@ typedef struct config_struct{
     int Fuel_tank_capacity;
 }config_struct;
 
-typedef struct race{
+typedef struct race_struct{
     int status; //Started, ended, interruped
     sem_t race_begin;
     sem_t teams_ready;
-}race;
+}race_struct;
 
-typedef struct team{
+typedef struct team_stuct{
     int initiated;
     int team_number;
     char name[STR_LENGHT]; 
     int box_status;
     int number_team_cars;
     sem_t modify_team;
-}team;
+}team_stuct;
 
-typedef struct car{
+typedef struct car_struct{
     int number;
     int team_number;
     int state;
@@ -98,7 +98,7 @@ typedef struct car{
     int current_fuel;
     int box_stops;
     int comunication_pipe[2];
-}car;
+}car_struct;
 
 
 //Vars
@@ -121,7 +121,7 @@ sem_t *log_semaphore;
 
 
 //Shared memory locations
-race *race_struct;
-team *first_team;
-car *first_car;
+race_struct *race;
+team_stuct *first_team;
+car_struct *first_car;
 #endif
