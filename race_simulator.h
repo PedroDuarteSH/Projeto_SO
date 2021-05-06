@@ -3,7 +3,9 @@
 
 #ifndef race_simulator
 #define race_simulator  /* Include guard */
-  
+
+#define NAME "A"
+
 //User libraries
 #include "shared_mem.h"
 #include "functions.h"

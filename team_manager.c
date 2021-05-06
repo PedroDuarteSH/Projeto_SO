@@ -12,15 +12,14 @@ team *this_team;
 pthread_t *cars;
 
 
-void team_manager_start(int team_number){
-#ifdef DEBUG
-    print("Searching for team");
-#endif
-    this_team = (team *)(race_struct + 1 + team_number);
+void team_manager_start(team* self){
+    this_team = self;
+
 #ifdef DEBUG
     print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
 #endif
 
+    sem_wait(&race_struct->race_begin);
     car**team_cars = find_team_cars();
     
     cars = (pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
@@ -55,7 +54,7 @@ void team_manager_start(int team_number){
 
 car **find_team_cars(){
     car ** team_cars = malloc(sizeof(car) * this_team->number_team_cars);
-    team_cars[0] = (car *)this_team + (config_struct->number_of_teams - this_team->team_number) + this_team->team_number * config_struct->max_cars_team;
+    team_cars[0] = (car *)this_team + (config->number_of_teams - this_team->team_number) + this_team->team_number * config->max_cars_team;
     
     for (int i = 1; i < this_team->number_team_cars; i++){
         team_cars[i] = (car *) team_cars[i-1] + 1;

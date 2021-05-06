@@ -22,10 +22,8 @@
 
 #define DEBUG
 
-
 #define PIPENAME "CARS"
 
-#define MAX_SIZE 30
 
 #define EMPTY -1
 #define CREATED 1
@@ -41,20 +39,29 @@
 #define BUSY 1
 #define RESERVED 2
 
+//car status
+#define GAVE_UP -2
+#define NOTSTARTED -1
+#define BOX 0
+#define SECURITY 1
+#define RACE 2
+
+
+
 //variable defines
-#define CAR_INPUT_SIZE 11
+#define CAR_COMMAND_SIZE 11
 #define TRUE 1
 #define FALSE 0
 
 
 //String siz management
 #define INPUT_LENGHT 200
-#define SMALL_STR_LENGHT 10
+#define STR_LENGHT 30
 
 
 
 
-typedef struct config{
+typedef struct config_struct{
     int  T_units_second;
     int lap_distance;
     int lap_number;
@@ -64,7 +71,7 @@ typedef struct config{
     int T_Box_min;
     int T_Box_Max;
     int Fuel_tank_capacity;
-}config;
+}config_struct;
 
 typedef struct race{
     int status; //Started, ended, interruped
@@ -75,7 +82,7 @@ typedef struct race{
 typedef struct team{
     int initiated;
     int team_number;
-    char name[MAX_SIZE]; 
+    char name[STR_LENGHT]; 
     int box_status;
     int number_team_cars;
     sem_t modify_team;
@@ -89,6 +96,7 @@ typedef struct car{
     int speed;
     int reliability;
     int current_fuel;
+    int box_stops;
     int comunication_pipe[2];
 }car;
 
@@ -99,11 +107,11 @@ pid_t main_pid;
 //Shared memory id
 int shm_id;
 
+//
+int msq_id;
 
-config *config_struct;
-
-
-
+//Struct to save config files
+config_struct *config;
 
 
 //Log file management
@@ -111,9 +119,7 @@ FILE *log_file;
 sem_t *log_semaphore;
 
 
-
+//Shared memory locations
 race *race_struct;
-
-int *car_pipes[2];
 
 #endif

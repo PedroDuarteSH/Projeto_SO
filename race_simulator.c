@@ -61,8 +61,8 @@ int main(){
 //Generates and attach the shared memory struture
 void init_program(){
   //Generate global structure shared memory
-  int shared_mem_size = sizeof(race) + sizeof(team) * config_struct->number_of_teams + sizeof(car) * config_struct->number_of_teams * config_struct->max_cars_team;
-  if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | 0777)) < 1){
+  int shared_mem_size = sizeof(race) + sizeof(team) * config->number_of_teams + sizeof(car) * config->number_of_teams * config->max_cars_team;
+  if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | IPC_EXCL | 0700)) < 1){
     perror("Error in shmget with IPC_CREAT\n");
     exit(1);
   }
@@ -73,16 +73,19 @@ void init_program(){
   }
 
   race_struct->status = NOT_STARTED;
-  team *temp_team = (team *)(race_struct + 1);
-  for (int i = 0; i < config_struct->number_of_teams; i++){
+  team *temp_team = (team *)(race_struct + 1);;
+  char name[30] = NAME;
+  for (int i = 0; i < config->number_of_teams; i++){
     temp_team->initiated = EMPTY;
-    team *temp_team = (team *)(temp_team + 1);
+    strcpy(temp_team->name, name); 
+    printf("%s - %d\n", temp_team->name, temp_team->initiated);
+    fflush(stdout);
+    temp_team = (team *)(temp_team + 1);
   }
-  car *current_car = (car *)temp_team;
-  for (int i = 0; i < config_struct->number_of_teams * config_struct->max_cars_team; i++){
-    current_car->comunication_pipe[0] = EMPTY;
-    current_car->comunication_pipe[1] = EMPTY;
-    car *current_car = (car *)(current_car + 1);
+  car *current_car = (car *) temp_team;
+  for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
+    current_car->number = EMPTY;
+    car *current_car = (current_car + 1);
   }
 
   //Race Semaphores Init
@@ -109,3 +112,13 @@ void print_statistics(){
 
 }
 
+void show_shm(){
+  printf("Showing shm (integer by integer):\n");
+  // The effect of p+n where p is a pointer and n is an integer is to compute the address equal to p plus n times the size of whatever p points to
+  int *p = (int *) race_struct;
+  for(int i=0;i<((sizeof(race) + sizeof(team) * config->number_of_teams + sizeof(car) * config->number_of_teams * config->max_cars_team)/sizeof(int));i++){
+    printf("%d  ",*(p+i));
+    if(i%2==1) printf("\n");
+  }
+  printf("\n");
+}

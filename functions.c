@@ -73,29 +73,29 @@ int *read_config_file(){
 }
 
 void process_config_file(int *configs){
-  config_struct = malloc(sizeof(config));
-  config_struct->T_units_second = configs[0];
-  config_struct->lap_distance = configs[1];
-  config_struct->lap_number = configs[2];
-  config_struct->number_of_teams = configs[3];
-  config_struct->max_cars_team = configs[4];
-  config_struct->T_breakdown_interval = configs[5];
-  config_struct->T_Box_min = configs[6];
-  config_struct->T_Box_Max = configs[7];
-  config_struct->Fuel_tank_capacity = configs[8];
+  config = malloc(sizeof(config_struct));
+  config->T_units_second = configs[0];
+  config->lap_distance = configs[1];
+  config->lap_number = configs[2];
+  config->number_of_teams = configs[3];
+  config->max_cars_team = configs[4];
+  config->T_breakdown_interval = configs[5];
+  config->T_Box_min = configs[6];
+  config->T_Box_Max = configs[7];
+  config->Fuel_tank_capacity = configs[8];
 }
 
 //Debug
 void print_config_file(){
-    printf("%d\n", config_struct->T_units_second);
-    printf("%d\n", config_struct->lap_distance);
-    printf("%d\n", config_struct->lap_number);
-    printf("%d\n", config_struct->number_of_teams);
-    printf("%d\n", config_struct->max_cars_team);
-    printf("%d\n", config_struct->T_breakdown_interval);
-    printf("%d\n", config_struct->T_Box_min);
-    printf("%d\n", config_struct->T_Box_Max);
-    printf("%d\n", config_struct->Fuel_tank_capacity);
+    printf("%d\n", config->T_units_second);
+    printf("%d\n", config->lap_distance);
+    printf("%d\n", config->lap_number);
+    printf("%d\n", config->number_of_teams);
+    printf("%d\n", config->max_cars_team);
+    printf("%d\n", config->T_breakdown_interval);
+    printf("%d\n", config->T_Box_min);
+    printf("%d\n", config->T_Box_Max);
+    printf("%d\n", config->Fuel_tank_capacity);
 }
 
 
