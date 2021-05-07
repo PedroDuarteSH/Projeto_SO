@@ -8,8 +8,7 @@
 #include "functions.h"
 
 //functions
-void team_manager_start(int i);
-void team_manager_init();
-void attach_update_team_shm(int i);
+void team_manager_start(team_stuct *self);
+car_struct **find_team_cars();
 void *car_init(void * shm_ids);
 #endif

@@ -5,20 +5,16 @@
 #define functions
 
 //C libraries
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "shared_mem.h"
 //User define variables
 #define line_lenght 20
 #define number_of_configs 9
 
-
-//Structs
+#define LOG_SEM_NAME "log_semaphore"
 
 //Functions declarations
-//Memory first creation
-void gen_shared_memory();
+void clear_resources();
+void remove_shm();
 
 //Config file gesture
 int *read_config_file();
@@ -28,9 +24,8 @@ void process_config_file(int *configs);
 //String auxiliar
 char * concat (char *s1, char *s2);
 void strip(char *phrase);
+
 //Log_writing
-void init_log();
-void global_init_log(FILE *input_log_file, sem_t input_log_sem);
 void print(char *result);
 
 //Usefull information

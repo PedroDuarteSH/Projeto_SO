@@ -8,54 +8,60 @@
 #include "team_manager.h"
 
 
-team *this_team;
-int *team_cars;
+team_stuct *this_team;
 pthread_t *cars;
 
-void team_manager_start(int i){
-    attach_update_team_shm(i);
-    team_manager_init();
-    //gestaoBox()
-    //gerirAbastecimentoDosCarros
-}
-void team_manager_init(){
-    print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
-    cars =(pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
-    //shm_indexes = malloc(sizeof(int) * 1);
-    //Colocar endereços de shared memory necessarios aos carros
-   
-    sem_post(&race_struct->teams_ready);
 
+void team_manager_start(team_stuct *self){
+    this_team = self;
+
+#ifdef DEBUG
+    print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
+#endif
+
+    sem_post(&race->teams_ready);
+
+
+    
+    car_struct **team_cars = find_team_cars();
+    cars = (pthread_t *) malloc(sizeof(pthread_t) * this_team->number_team_cars);
+
+    
     //Wait for race to start
-    sem_wait(&race_struct->race_begin);
-    team_cars = shmat(this_team->cars_shmid, NULL, 0);
+    sem_wait(&race->race_begin);
+    
+    
+
     for(int i = 0;i < this_team->number_team_cars;i++){
-        car * c = shmat(team_cars[i], NULL,0);
-        pthread_create(&cars[i],NULL,car_init,c);
+        pthread_create(&cars[i],NULL,car_init,team_cars[i]);
     }
 
-    //print(concat("READY: CARS OF TEAM ", this_team->name));
+    print(concat("READY: CARS OF TEAM ", this_team->name));
 
     for(int i = 0;i < this_team->number_team_cars;i++){
         pthread_join(cars[i],NULL); //Wait for car threads to finish
     }
-    //print(concat("Dead team: ", this_team->name));
+    print(concat("Dead team: ", this_team->name));
     free(cars);
     exit(0);
 }
 
 
-void attach_update_team_shm(int i){
-    shm_struct = shmat(shm_id, NULL, 0);
-    race_struct = shmat(shm_struct->race_shmid, NULL, 0);
-    int *teams = shmat(race_struct->teams_shmid, NULL, 0);
-    this_team = shmat(teams[i], NULL, 0);
-    shmdt(teams);
+car_struct **find_team_cars(){
+    car_struct ** team_cars = malloc(sizeof(car_struct) * this_team->number_team_cars);
+    car_struct *temp_car = (car_struct *) (first_car);
+    temp_car = temp_car + config->max_cars_team * this_team->team_number;
+    for (int i = 0; i < this_team->number_team_cars; i++){
+        printf("CAR %d - From team %s\n", temp_car->number, this_team->name);
+        team_cars[i] = (car_struct *) (temp_car);
+        temp_car = (car_struct *) (temp_car+1);
+        
+    }
+    return team_cars;
 }
 
-
 void *car_init(void * arg){
-    car *c = (car *)(arg);
+    car_struct *c = (car_struct *)(arg);
     char buffer [100];
     snprintf (buffer, 100, "Team %s :Car number %d is Raccing",this_team->name, c->number);
     print(buffer);

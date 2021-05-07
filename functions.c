@@ -5,75 +5,42 @@
 #include "shared_mem.h"
 #include <time.h>
 
-//Generates and attach to this process the shared memory struture
-void gen_shared_memory(){
-  //Generate global structure shared memory
-  if ((shm_id = shmget(IPC_PRIVATE, sizeof(shr_memory), IPC_CREAT | 0777)) < 1){
-    perror("Error in shmget with IPC_CREAT\n");
-    exit(1);
-  }
-  shm_struct = shmat(shm_id, NULL, 0);
+void clear_resources(){
+  
+  //Destroy unnamed semaphores
+  sem_destroy(&race->teams_ready);
+  sem_destroy(&race->race_begin);
+  
+  //Detach shared memory from processes
+  shmdt(race);
 
-  //Generate config structure shared memory updating the shared memory struct
-  if ((shm_struct->config_shmid = shmget(IPC_PRIVATE, sizeof(config), IPC_CREAT | 0777)) < 1){
-    perror("Error in shmget with IPC_CREAT\n");
-    exit(1);
-  }
-  config_struct = shmat(shm_struct->config_shmid, NULL, 0);
+  //Destroy named semaphores
+  sem_close(log_semaphore);
+  
+  if(getpid() == main_pid){
+    //Esperar pelos processos filho (Corrida e Malfunction)
+    wait(NULL); 
+    wait(NULL);
 
-  if ((shm_struct->race_shmid = shmget(IPC_PRIVATE, sizeof(race), IPC_CREAT | 0777)) < 1){
-    perror("Error in shmget with IPC_CREAT\n");
-    exit(1);
-  }
-  race_struct = shmat(shm_struct->race_shmid, NULL, 0);
+    //Eliminar memória partilhada
+    if(shm_id >= 0)
+      remove_shm();
+  
 
-  //semaphore init
-  sem_init(&race_struct->race_begin, 1, 0);
-  sem_init(&race_struct->teams_ready, 1, 0);
+    sem_unlink(LOG_SEM_NAME);
+    unlink(PIPENAME);
+    fclose(log_file);
+  }
+  exit(0);
 }
-
-void clean(){
-  if(shm_id < 0)
-    return;
-  teams = shmat(race_struct->teams_shmid, NULL, 0);  
-  for (int i = 0; i < config_struct->number_of_teams; i++){
-    if(teams[i] != EMPTY){
-      team *t = shmat(teams[i], NULL, 0);
-      if(t->cars_shmid >= 0){
-        int * team_cars = shmat(t->cars_shmid, NULL, 0);
-        for (int i = 0; i < t->number_team_cars; i++){
-          if(t >= 0)
-            shmctl(team_cars[i], IPC_RMID, NULL);
-        }
-      }
-      shmctl(t->cars_shmid, IPC_RMID, NULL);
-      shmdt(t);
-      shmctl(teams[i], IPC_RMID, NULL);
-    }
+void remove_shm(){
+  if(shmctl(shm_id, IPC_RMID, NULL) == -1){
+    shmdt(race);
+#ifdef DEBUG
+    print("Erro a remover memória partilhada");
+#endif
   }
-  if(shm_struct->race_shmid >= 0){
-    sem_destroy(&race_struct->teams_ready);
-    sem_destroy(&race_struct->race_begin);
-    shmdt(race_struct);
-    shmctl(shm_struct->race_shmid, IPC_RMID, NULL);
-  }  
-
-  if(shm_struct->config_shmid >= 0){
-    shmdt(config_struct);
-    shmctl(shm_struct->config_shmid, IPC_RMID, NULL);
-  }
-  if(shm_struct->race_shmid >= 0){
-    sem_destroy(&race_struct->teams_ready);
-    sem_destroy(&race_struct->race_begin);
-    shmdt(race_struct);
-    shmctl(shm_struct->race_shmid, IPC_RMID, NULL);
-  }
-  fclose(shm_struct->log_file);
-  sem_destroy(&shm_struct->log_sem);
-  shmdt(shm_struct);
-  shmctl(shm_id, IPC_RMID, NULL);
 }
-
 //Config file gesture
 int *read_config_file(){
     /* Config int[] format
@@ -114,44 +81,32 @@ int *read_config_file(){
 }
 
 void process_config_file(int *configs){
-  config_struct->T_units_second = configs[0];
-  config_struct->lap_distance = configs[1];
-  config_struct->lap_number = configs[2];
-  config_struct->number_of_teams = configs[3];
-  config_struct->max_cars_team = configs[4];
-  config_struct->T_breakdown_interval = configs[5];
-  config_struct->T_Box_min = configs[6];
-  config_struct->T_Box_Max = configs[7];
-  config_struct->Fuel_tank_capacity = configs[8];
+  config = malloc(sizeof(config_struct));
+  config->T_units_second = configs[0];
+  config->lap_distance = configs[1];
+  config->lap_number = configs[2];
+  config->number_of_teams = configs[3];
+  config->max_cars_team = configs[4];
+  config->T_breakdown_interval = configs[5];
+  config->T_Box_min = configs[6];
+  config->T_Box_Max = configs[7];
+  config->Fuel_tank_capacity = configs[8];
 }
 
 //Debug
 void print_config_file(){
-    printf("%d\n", config_struct->T_units_second);
-    printf("%d\n", config_struct->lap_distance);
-    printf("%d\n", config_struct->lap_number);
-    printf("%d\n", config_struct->number_of_teams);
-    printf("%d\n", config_struct->max_cars_team);
-    printf("%d\n", config_struct->T_breakdown_interval);
-    printf("%d\n", config_struct->T_Box_min);
-    printf("%d\n", config_struct->T_Box_Max);
-    printf("%d\n", config_struct->Fuel_tank_capacity);
+    printf("%d\n", config->T_units_second);
+    printf("%d\n", config->lap_distance);
+    printf("%d\n", config->lap_number);
+    printf("%d\n", config->number_of_teams);
+    printf("%d\n", config->max_cars_team);
+    printf("%d\n", config->T_breakdown_interval);
+    printf("%d\n", config->T_Box_min);
+    printf("%d\n", config->T_Box_Max);
+    printf("%d\n", config->Fuel_tank_capacity);
 }
 
 
-//Log management
-void init_log(){
-  shm_struct->log_file = fopen("log.txt", "w");
-  sem_init(&shm_struct->log_sem, 1, 1);
-  global_init_log(shm_struct->log_file, shm_struct->log_sem);
-}
-
-FILE *log_file = NULL;
-sem_t log_sem;
-void global_init_log(FILE *input_log_file, sem_t input_log_sem){
-    log_file =  input_log_file;
-    log_sem = input_log_sem;
-}
 
 void print(char *result){
     char time_str[20];
@@ -161,12 +116,12 @@ void print(char *result){
 
     strftime(time_str, 20, "%H:%M:%S", tm_info);
 
-    sem_wait(&log_sem);
+    sem_wait(log_semaphore);
     fprintf(log_file, "%s:%s\n",time_str,result);
     printf("%s:%s\n",time_str,result);
     fflush(log_file);
     fflush(stdout);
-    sem_post(&log_sem);
+    sem_post(log_semaphore);
 }
 
 
