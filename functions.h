@@ -15,6 +15,7 @@
 //Functions declarations
 void clear_resources();
 void remove_shm();
+void remove_msq();
 
 //Config file gesture
 int *read_config_file();

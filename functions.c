@@ -5,42 +5,56 @@
 #include "shared_mem.h"
 #include <time.h>
 
-void clear_resources(){
-  
+void clear_resources(int signum){
   //Destroy unnamed semaphores
   sem_destroy(&race->teams_ready);
   sem_destroy(&race->race_begin);
   
   //Detach shared memory from processes
   shmdt(race);
-
   //Destroy named semaphores
-  sem_close(log_semaphore);
   
+
   if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
+    print("SIMULATOR CLOSING");
     wait(NULL); 
     wait(NULL);
-
     //Eliminar memória partilhada
     if(shm_id >= 0)
       remove_shm();
-  
-
-    sem_unlink(LOG_SEM_NAME);
+    if(msq_id >= 0)
+      remove_msq();
+    
     unlink(PIPENAME);
+   
     fclose(log_file);
+    sem_unlink(LOG_SEM_NAME);
   }
+  sem_close(log_semaphore); 
   exit(0);
 }
 void remove_shm(){
   if(shmctl(shm_id, IPC_RMID, NULL) == -1){
-    shmdt(race);
 #ifdef DEBUG
-    print("Erro a remover memória partilhada");
+    print(concat ("Error removing shared memory: ", strerror(errno)));
 #endif
   }
 }
+
+void remove_msq(){
+  if(msgctl(msq_id, IPC_RMID, NULL) == -1){
+#ifdef DEBUG
+    print(concat ("Error removing message queue: ", strerror(errno)));
+#endif
+  }
+
+
+
+
+}
+
+
 //Config file gesture
 int *read_config_file(){
     /* Config int[] format

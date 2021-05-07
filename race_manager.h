@@ -25,7 +25,8 @@
 //Functions declarations
 //race manager initiation
 void race_manager_init();
-void create_pipes(int max_number_cars);
+void create_pipes();
+void clean_data();
 //shared memory attach to process
 void attach_update_race_shm();
 
