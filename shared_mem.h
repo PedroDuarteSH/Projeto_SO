@@ -85,6 +85,7 @@ typedef struct team_stuct{
     int team_number;
     char name[STR_LENGHT]; 
     int box_status;
+    int box_Stops;
     int number_team_cars;
     int comunication_pipe[2];
     pthread_mutex_t access_box;
