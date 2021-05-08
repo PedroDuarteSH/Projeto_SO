@@ -19,7 +19,7 @@ int main(){
   if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
   init_log();
-  
+ 
   //generate the shared memory and control mechanisms
   init_program();
 
@@ -79,7 +79,7 @@ void init_program(){
   clean_data();
   //Race Semaphores Init
   sem_init(&race->race_begin, 1, 0);
-  sem_init(&race->teams_ready, 1, 0);
+  sem_init(&race->cars_ready, 1, 0);
 }
 
 void clean_data(){

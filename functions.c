@@ -7,7 +7,7 @@
 
 void clear_resources(int signum){
   //Destroy unnamed semaphores
-  sem_destroy(&race->teams_ready);
+  sem_destroy(&race->cars_ready);
   sem_destroy(&race->race_begin);
   
   //Detach shared memory from processes
@@ -48,10 +48,6 @@ void remove_msq(){
     print(concat ("Error removing message queue: ", strerror(errno)));
 #endif
   }
-
-
-
-
 }
 
 

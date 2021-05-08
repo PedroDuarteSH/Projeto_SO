@@ -49,12 +49,15 @@ void race_manager_init(){
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
-                    if(read(team_temp->comunication_pipe[0], &p_car_number, READ_BUFF) == -1)
+
+                    car_struct *temp_car;
+                    if(read(team_temp->comunication_pipe[0], temp_car, sizeof(car_struct)) == -1)
                         perror("Error reding from named pipe: ");
-                    team_temp = (team_stuct *)(team_temp + 1);
+                    
                 
                     //FAZER UNNAMED PIPE
                 }
+                team_temp = (team_stuct *)(team_temp + 1);
             }
             
         }
@@ -231,17 +234,19 @@ void start_race(){
     temp_team = first_team;
     for (int i = 0; i < config->number_of_teams; i++){
         for (int j = 0; j < temp_team->number_team_cars; j++) 
-            sem_wait(&race->teams_ready);
+            sem_wait(&race->cars_ready);
         temp_team = (team_stuct *)(temp_team + 1);
     }
     //Inform cars and malfunction process that race has started
-    temp_team = first_team;
     sem_post(&race->race_begin);
+    temp_team = first_team;
+    //Inform cars and malfunction process that race has started
+
     for (int i = 0; i < config->number_of_teams; i++){
         for (int j = 0; j < temp_team->number_team_cars; j++)
             sem_post(&race->race_begin);
         temp_team = (team_stuct *)(temp_team + 1);
-    } 
+    }
 }
 
 int verify_teams(){
