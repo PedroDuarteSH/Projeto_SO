@@ -46,6 +46,7 @@
 #define BOX 0
 #define SECURITY 1
 #define RACE 2
+#define FINISHED 3
 
 
 
@@ -77,7 +78,7 @@ typedef struct config_struct{
 typedef struct race_struct{
     int status; //Started, ended, interruped
     sem_t race_begin;
-    sem_t teams_ready;
+    sem_t cars_ready;
 }race_struct;
 
 typedef struct team_stuct{
@@ -86,7 +87,7 @@ typedef struct team_stuct{
     int box_status;
     int number_team_cars;
     int comunication_pipe[2];
-    sem_t modify_team;
+    pthread_mutex_t access_box;
 }team_stuct;
 
 typedef struct car_struct{
@@ -98,7 +99,8 @@ typedef struct car_struct{
     int reliability;
     int current_fuel;
     int box_stops;
-    
+    int distance;
+    int completed_laps;
 }car_struct;
 
 

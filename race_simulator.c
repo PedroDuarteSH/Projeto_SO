@@ -81,7 +81,7 @@ void init_program(){
   clean_data();
   //Race Semaphores Init
   sem_init(&race->race_begin, 1, 0);
-  sem_init(&race->teams_ready, 1, 0);
+  sem_init(&race->cars_ready, 1, 0);
 }
 
 void clean_data(){
