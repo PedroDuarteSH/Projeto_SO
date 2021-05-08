@@ -2,58 +2,110 @@
 //Pedro Henriques 2019217793
 
 #include "race_simulator.h"
-//Main file
-//Processo  responsável  por  iniciar  o sistema e os restantes processos do simulador.
 
-/* TO DO
-● Cria	Named	Pipe de	comunicação	com	o	Gestor	de	Corrida
-● Inicia	o	processo	Gestor	de	Corrida
-● Inicia	o	processo	Gestor	de	Avarias
-● Captura	o	sinal	SIGTSTP e	imprime	estatísticas
-● Captura	o	sinal	SIGINT	para	terminar a	corrida	e	o	programa.	Ao	receber	este	sinal,	
-deve	 aguardar	 que	 todos	 os	 carros	 cruzem	 a	meta	 (mesmo	 que	 não	 seja	 a	 sua	
-última	volta)	- os	carros	que	se	encontram	na	box	no	momento	da	instrução	devem	
-terminar.	 Após	 todos	 os	 carros	 concluírem	 a	 corrida,	 deverá	 imprimir	 as	
-estatísticas	do	jogo	e	terminar/libertar/remover	todos	os	recursos	utilizados.*/
 
-/* DONE
-● Lê	configurações	do	Ficheiro	de	Configuração (ver	exemplo	fornecido)
-*/
 
 int main(){
+  //Ignora o sinal SIG_INT até fazer todas as inicializações
+  signal(SIGINT, SIG_IGN);
+  
+  //Save Process Pid to clean it
+  main_pid = getpid();
+  //Make IDS to know that is not created
+  shm_id = -1;
+  msq_id = -1;
+
   //read config file
   int *configs = NULL;
   configs = read_config_file();
-  if (configs == NULL)
-    printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
-  
-  //generate the shared memory
-  gen_shared_memory();
-  init_log();
-  print("Initiated_program!");
-
+  if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
+  
+  //generate the shared memory and control mechanisms
+  init_program();
+
+  free(configs);
+  init_log();
+
+  //Create Named Pipe
+  create_named_pipe(PIPENAME);
+
+
   //Updates the config struct with file configs
-  race_manager_process = fork();
+  pid_t race_manager_process = fork();
   if(race_manager_process == 0){
     print("Starting race process manager...");
+    signal(SIGINT, clear_resources);
     //RACE MANAGER PROCESS
     race_manager_init();
     exit(0);
   }
-  malfunction_manager_process = fork();
+  pid_t malfunction_manager_process = fork();
   if(malfunction_manager_process == 0){
+    signal(SIGINT, clear_resources);
     print("Created Malfuntion process");
-    sem_wait(&race_struct->race_begin);
+    sem_wait(&race->race_begin);
     print("Malfuntion process initiated");
     //MALFUNCTION PROCESS
     exit(0);
   }
-  wait(NULL);
-  wait(NULL);
-  print("Finished");
-  free(configs);
-  clean();
 
-  print("Limpo");
+  //Gestão de sinais
+  signal(SIGINT, clear_resources);
+  signal(SIGTSTP, print_statistics);
+  
+  while(1){
+    pause();
+  }
+}
+
+//Generates and attach the shared memory struture
+void init_program(){
+  //Generate global structure shared memory
+  int shared_mem_size = sizeof(race) + (sizeof(team_stuct) * config->number_of_teams) + (sizeof(car_struct) * config->number_of_teams * config->max_cars_team);
+  if ((shm_id = shmget(IPC_PRIVATE, shared_mem_size, IPC_CREAT | IPC_EXCL | 0700)) < 1){
+    perror("Error in shmget with IPC_CREAT\n");
+    exit(1);
+  }
+
+  if((race = (race_struct *) shmat(shm_id, NULL, 0)) == (race_struct *)-1){
+      print("Error attaching shared memory in race_manager process");
+      exit(0);
+  }
+
+  //Race Semaphores Init
+  sem_init(&race->race_begin, 1, 0);
+  sem_init(&race->teams_ready, 1, 0);
+}
+
+//Log management
+void init_log(){
+  log_file = fopen("log.txt", "w");
+  log_semaphore = sem_open(LOG_SEM_NAME, O_CREAT | O_EXCL, 0777, 1);
+}
+
+//Create Named pipe
+void create_named_pipe(char *name){
+  unlink(name);
+  if ((mkfifo(name, O_CREAT|O_EXCL|0600)<0) && (errno != EEXIST)){
+    print("CANNOT CREATE NAMED PIPE -> EXITING\n");
+    remove_shm();
+    exit(0);
+  }
+}
+
+void create_msq(){
+  //Delete message queue if exists
+  msgctl(msq_id, IPC_RMID, NULL);
+  //Create message queue
+  if((msq_id = msgget(IPC_PRIVATE, IPC_CREAT|0777)) == -1){
+    print("Error creating message queue");
+    exit(0);
+  }
+}
+
+
+void print_statistics(){
+
+
 }

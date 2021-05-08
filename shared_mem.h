@@ -4,32 +4,6 @@
 #ifndef shared_mem   /* Include guard */
 #define shared_mem
 
-#define debug
-
-#define MAX_SIZE 30
-
-#define EMPTY -1
-
-
-//Box status
-#define FREE 0
-#define BUSY 1
-#define RESERVED 2
-
-//variable defines
-#define CAR_INPUT_SIZE 11
-#define TRUE 1
-#define FALSE 0
-
-//Car management
-#define INVALID_COMMAND 0
-#define CANT_ADD_TEAM 1
-#define CAR_ADDED 2
-
-//String siz management
-#define INPUT_LENGHT 200
-#define SMALL_STR_LENGHT 10
-
 //imports 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,16 +15,54 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <signal.h>
 
-//structs
-typedef struct shr_memory{
-    int config_shmid; //Config struct
-    int race_shmid; //Race struct
-    sem_t log_sem; //Log Posix semaphore to control log input
-    FILE *log_file; //Log File address to doesn't open file every time
-}shr_memory;
 
-typedef struct config{
+#define DEBUG
+
+#define PIPENAME "CARS"
+
+
+#define EMPTY -1
+#define CREATED 1
+
+//Race management
+#define NOT_STARTED 0
+#define STARTED 1
+#define INTERRUPTED 2
+
+
+//Box status
+#define FREE 0
+#define BUSY 1
+#define RESERVED 2
+
+//car status
+#define GAVE_UP -2
+#define NOTSTARTED -1
+#define BOX 0
+#define SECURITY 1
+#define RACE 2
+
+
+
+//variable defines
+#define CAR_COMMAND_SIZE 11
+#define TRUE 1
+#define FALSE 0
+
+
+//String siz management
+#define INPUT_LENGHT 200
+#define STR_LENGHT 30
+
+
+
+
+typedef struct config_struct{
     int  T_units_second;
     int lap_distance;
     int lap_number;
@@ -60,40 +72,57 @@ typedef struct config{
     int T_Box_min;
     int T_Box_Max;
     int Fuel_tank_capacity;
-}config;
+}config_struct;
 
-typedef struct race{
-    int status; //Started, ended, interruped, 
-    int teams_shmid;//Array in shared memory with team structs address
+typedef struct race_struct{
+    int status; //Started, ended, interruped
     sem_t race_begin;
     sem_t teams_ready;
-}race;
+}race_struct;
 
-typedef struct team{
-    char name[MAX_SIZE]; 
+typedef struct team_stuct{
+    int initiated;
+    int team_number;
+    char name[STR_LENGHT]; 
     int box_status;
     int number_team_cars;
-    int cars_shmid;//Array in shared memory with team structs address
     sem_t modify_team;
-}team;
+}team_stuct;
 
-typedef struct car{
+typedef struct car_struct{
     int number;
+    int team_number;
     int state;
     float consumption;
     int speed;
     int reliability;
     int current_fuel;
-}car;
+    int box_stops;
+    int comunication_pipe[2];
+}car_struct;
+
 
 //Vars
-int shm_id;
-race *race_struct;
-config *config_struct;
-shr_memory *shm_struct;
-int *teams;
+//Main PID
+pid_t main_pid;
 
-pid_t race_manager_process;
-pid_t malfunction_manager_process;
-//Public declared functions
+//Shared memory id
+int shm_id;
+
+//Message Queue ID
+int msq_id;
+
+//Struct to save config files
+config_struct *config;
+
+
+//Log file management
+FILE *log_file;
+sem_t *log_semaphore;
+
+
+//Shared memory locations
+race_struct *race;
+team_stuct *first_team;
+car_struct *first_car;
 #endif
