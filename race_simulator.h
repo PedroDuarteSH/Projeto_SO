@@ -8,6 +8,7 @@
 #include "shared_mem.h"
 #include "functions.h"
 #include "race_manager.h"
+#include "malfunction_manager.h"
 
 void init_program();
 void init_log();

@@ -1,5 +1,5 @@
 CC = gcc
-OBJS = race_simulator.c race_manager.c functions.c team_manager.c
+OBJS = race_simulator.c race_manager.c functions.c team_manager.c malfunction_manager.c
 PROG = race_simulator
 CFLAGS = -Wall -pthread -g
 

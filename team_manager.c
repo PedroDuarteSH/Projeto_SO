@@ -24,6 +24,7 @@ void team_manager_start(team_stuct *self){
     for(int i = 0;i < this_team->number_team_cars;i++){
         pthread_create(&cars[i],NULL,car_init,team_cars[i]);
     }
+    msg_queque_received();
 #ifdef DEBUG
     print(concat("READY: CARS OF TEAM ", this_team->name));
 #endif
@@ -67,4 +68,12 @@ void *car_init(void * arg){
     snprintf (buffer, 100, "Team %s :Car number %d reached finish line ",this_team->name, c->number);
     print(buffer);
     pthread_exit(NULL);
+}
+
+void msg_queque_received(){
+    malfunction  received_msg;
+    while(1){
+        msgrcv(msq_id,&received_msg,sizeof(malfunction)-sizeof(long),-3,0);
+        printf("Avaria no carro %ld\n",received_msg.carNumber);
+    }
 }

@@ -236,6 +236,7 @@ void start_race(){
     }
     //Inform cars and malfunction process that race has started
     temp_team = first_team;
+    sem_post(&race->race_begin);
     for (int i = 0; i < config->number_of_teams; i++){
         for (int j = 0; j < temp_team->number_team_cars; j++)
             sem_post(&race->race_begin);
