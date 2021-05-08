@@ -49,6 +49,7 @@ void race_manager_init(){
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
+
                     car_struct *temp_car;
                     if(read(team_temp->comunication_pipe[0], temp_car, sizeof(car_struct)) == -1)
                         perror("Error reding from named pipe: ");
@@ -239,6 +240,8 @@ void start_race(){
     //Inform cars and malfunction process that race has started
     sem_post(&race->race_begin);
     temp_team = first_team;
+    //Inform cars and malfunction process that race has started
+
     for (int i = 0; i < config->number_of_teams; i++){
         for (int j = 0; j < temp_team->number_team_cars; j++)
             sem_post(&race->race_begin);

@@ -18,6 +18,7 @@ int main(){
   configs = read_config_file();
   if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
+  init_log();
   
 
   init_log();
@@ -47,7 +48,7 @@ int main(){
     print("Created Malfuntion process");
     sem_wait(&race->race_begin);
     print("Malfuntion process initiated");
-    //MALFUNCTION PROCESS
+    malfunction_manager_init();
     exit(0);
   }
   //Gestão de sinais

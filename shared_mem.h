@@ -98,7 +98,6 @@ typedef struct car_struct{
     int speed;
     int reliability;
     int current_fuel;
-    int box_stops;
     int distance;
     int completed_laps;
 }car_struct;

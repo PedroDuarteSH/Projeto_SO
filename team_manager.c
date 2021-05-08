@@ -78,7 +78,6 @@ void *car_init(void * arg){
     //Car ready to start
     sem_post(&race->cars_ready);
     
-    
     //Wait for race to start
     sem_wait(&race->race_begin);
 

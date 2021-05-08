@@ -139,6 +139,7 @@ void print(char *result){
 void strip(char *phrase){
     phrase[strcspn(phrase, "\r")] = 0;
     phrase[strcspn(phrase, "\n")] = 0;
+
 }
 
 char * concat (char * s1, char * s2) {
