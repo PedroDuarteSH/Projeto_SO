@@ -29,7 +29,10 @@ void team_manager_start(team_stuct *self){
         pthread_create(&cars[i],NULL,car_init,team_cars[i]);
     }
 
+    while(TRUE){
 
+
+    }
 
 
     for(int i = 0;i < this_team->number_team_cars;i++){
@@ -109,7 +112,6 @@ void *car_init(void * arg){
         if(msgrcv(msq_id,NULL, sizeof(malfunction) - sizeof(long), car->team_number * car->number,IPC_NOWAIT) == 0)
             change_state(car, SECURITY);
 
-        
         sleep(1);
     }
     if(car->current_fuel < 0)
