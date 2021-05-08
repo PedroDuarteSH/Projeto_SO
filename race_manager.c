@@ -16,14 +16,14 @@ void race_manager_init(){
 #endif
 
     char line[READ_BUFF];
-    int named_pipe, readed_chars, car_state;
+    int named_pipe, readed_chars, p_car_number;
     int max_number_cars = config->number_of_teams * config->max_cars_team;
     clean_data();
     create_pipes(max_number_cars);
     //Read Pipes
     fd_set read_set;
     //Car temp to read cars unnamed pipes
-    car_struct *car_temp;
+    team_stuct *team_temp;
     while (TRUE){
         //Open Named Pipe
         if ((named_pipe = open(PIPENAME, O_RDONLY | O_NONBLOCK)) < 0){
@@ -32,10 +32,10 @@ void race_manager_init(){
         }
         FD_ZERO(&read_set);
         FD_SET(named_pipe, &read_set);
-        car_temp = (car_struct *)(first_car);
-        for (int i = 0; i < max_number_cars; i++){
-            FD_SET(car_temp->comunication_pipe[0], &read_set);
-            car_temp = (car_struct *)(car_temp + 1);
+        team_temp = (team_stuct *)(first_team);
+        for (int i = 0; i < config->number_of_teams; i++){
+            FD_SET(team_temp->comunication_pipe[0], &read_set);
+            team_temp = (team_stuct *)(team_temp + 1);
         }
 
         if(select(named_pipe+1, &read_set, NULL, NULL, NULL) > 0){
@@ -46,14 +46,13 @@ void race_manager_init(){
                 if (race->status == NOT_STARTED) print(process_command(line));
                 else print(RACE_STARTED_ERR);
             }
-            car_temp = (car_struct *)(first_car);
-            for (int i = 0; i < max_number_cars; i++){
-                if(FD_ISSET(car_temp->comunication_pipe[0], &read_set)){
-                    if(read(named_pipe, &car_state, READ_BUFF) == -1)
+            team_temp = (team_stuct *)(first_team);
+            for (int i = 0; i < config->number_of_teams; i++){
+                if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
+                    if(read(team_temp->comunication_pipe[0], &p_car_number, READ_BUFF) == -1)
                         perror("Error reding from named pipe: ");
-                    car_temp = (car_struct *)(car_temp + 1);
-
-
+                    team_temp = (team_stuct *)(team_temp + 1);
+                
                     //FAZER UNNAMED PIPE
                 }
             }
@@ -69,33 +68,21 @@ void race_manager_init(){
 
 }
 
-void clean_data(){
-  race->status = NOT_STARTED;
-  first_team = (team_stuct *)(race + 1);
-  team_stuct *temp_team = first_team;
-  for (int i = 0; i < config->number_of_teams; i++){
-    temp_team->initiated = EMPTY;
-    temp_team = (team_stuct *)(temp_team + 1);
-  }
-  first_car = (car_struct *)(temp_team);
-  car_struct * temp_car = first_car;
-  for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
-    temp_car->number = EMPTY;
-    temp_car = (car_struct *)(temp_car + 1);
-  }
-}
 
-void create_pipes(int max_number_cars){
-    car_struct * car_temp = (car_struct *)(first_car);
-    for (int i = 0; i < max_number_cars; i++){
-        if(pipe(car_temp->comunication_pipe) == -1){
+
+void create_pipes(){
+    team_stuct * team_temp = (team_stuct *)(first_team);
+    for (int i = 0; i < config->number_of_teams; i++){
+        if(pipe(team_temp->comunication_pipe) == -1){
+            #ifdef DEBUG
             print("Error creating temp pipe");
+            #endif
 		    clear_resources();
         }
-#ifdef DEBUG
+        #ifdef DEBUG
         print("Unnamed Pipe created");
-#endif
-        car_temp = (car_struct *)(car_temp + 1);
+        #endif
+        team_temp = (team_stuct *)(team_temp + 1);
     }
     
 }
@@ -154,7 +141,7 @@ char* add_car(char *line){
     car_struct *car_to_add = find_car_pos(car_team, car_number);
     if(car_to_add == NULL){
         if(car_team->number_team_cars == 0)
-            car_team->initiated = EMPTY;
+            car_team->team_number = EMPTY;
         return concat(CAR_NUMBER_EXISTS, line);
     }
         
@@ -210,7 +197,7 @@ int verify_car_command(char *line, char ** line_splited){
 team_stuct *find_team(char *team_name){
     team_stuct *temp_team = first_team;
     for (int i = 0; i < config->number_of_teams; i++){
-        if(temp_team->initiated == EMPTY) return(create_team(temp_team, team_name,  i));
+        if(temp_team->team_number == EMPTY) return(create_team(temp_team, team_name,  i));
         else if(strcmp(temp_team->name, team_name) == 0) return temp_team;   
         temp_team = (team_stuct *)(temp_team + 1);
     }
@@ -222,7 +209,6 @@ team_stuct *create_team(team_stuct *team_struct, char *team_name, int team_numbe
     team_struct->number_team_cars = 0;
     team_struct->box_status = FREE;
     team_struct->team_number = team_number;
-    team_struct->initiated = CREATED;
     return team_struct;
 }
 
@@ -233,25 +219,34 @@ void start_race(){
     team_stuct *temp_team = first_team;
     for (int i = 0; i < config->number_of_teams; i++){
         if(fork() == 0){
+#ifdef DEBUG
             print(concat("TEAM CREATED => ", temp_team->name));
+#endif
             team_manager_start(temp_team);
         }
         temp_team = (team_stuct *)(temp_team + 1);
     }
 
     //Wait for all teams ready (Change to car threads?????)
+    temp_team = first_team;
     for (int i = 0; i < config->number_of_teams; i++){
-        sem_wait(&race->teams_ready);
+        for (int j = 0; j < temp_team->number_team_cars; j++) 
+            sem_wait(&race->teams_ready);
+        temp_team = (team_stuct *)(temp_team + 1);
     }
     //Inform cars and malfunction process that race has started
-    for (int i = 0; i < config->number_of_teams + 1; i++)
-        sem_post(&race->race_begin);    
+    temp_team = first_team;
+    for (int i = 0; i < config->number_of_teams; i++){
+        for (int j = 0; j < temp_team->number_team_cars; j++)
+            sem_post(&race->race_begin);
+        temp_team = (team_stuct *)(temp_team + 1);
+    } 
 }
 
 int verify_teams(){
     team_stuct *temp_team = (team_stuct *) first_team;
     for (int i = 0; i < config->number_of_teams; i++){
-        if (temp_team->initiated == EMPTY)
+        if (temp_team->team_number == EMPTY)
             return FALSE;
         temp_team = (team_stuct *) (temp_team + 1);
     }

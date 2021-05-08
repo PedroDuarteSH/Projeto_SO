@@ -21,7 +21,7 @@
 #include <signal.h>
 
 
-#define DEBUG
+//#define DEBUG
 
 #define PIPENAME "CARS"
 
@@ -81,11 +81,11 @@ typedef struct race_struct{
 }race_struct;
 
 typedef struct team_stuct{
-    int initiated;
     int team_number;
     char name[STR_LENGHT]; 
     int box_status;
     int number_team_cars;
+    int comunication_pipe[2];
     sem_t modify_team;
 }team_stuct;
 
@@ -98,9 +98,14 @@ typedef struct car_struct{
     int reliability;
     int current_fuel;
     int box_stops;
-    int comunication_pipe[2];
+    
 }car_struct;
 
+
+// structure for message queue
+typedef struct malfunction{
+    long carNumber;
+} malfunction;
 
 //Vars
 //Main PID
