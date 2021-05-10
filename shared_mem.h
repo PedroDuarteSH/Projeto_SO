@@ -76,6 +76,7 @@ typedef struct config_struct{
 
 typedef struct race_struct{
     int status; //Started, ended, interruped
+    int number_of_cars;
     sem_t race_begin;
     sem_t cars_ready;
 }race_struct;

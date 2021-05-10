@@ -84,6 +84,7 @@ void init_program(){
 
 void clean_data(){
   race->status = NOT_STARTED;
+  race->number_of_cars = 0;
   team_stuct *temp_team = first_team;
   for (int i = 0; i < config->number_of_teams; i++){
     temp_team->team_number = EMPTY;

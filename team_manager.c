@@ -12,7 +12,6 @@ void change_state(car_struct *car, int state);
 team_stuct *this_team;
 pthread_t *cars;
 //int *box_requests;
-char car_states[7][30] = {"is giving up!", "hasn't started!", "entered the pits!", "entered security mode", "is Racing!", "Finished!", "is now Malfuntioning"};
 
 pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
@@ -106,6 +105,7 @@ void *car_init(void * arg){
             else pthread_mutex_unlock(&check_box);
             car->distance-=config->lap_distance;
             car->completed_laps++;
+        
         }
 
         if(car->state == SECURITY || car->state == MALFUNTION){
@@ -119,7 +119,7 @@ void *car_init(void * arg){
         if(msgrcv(msq_id, &mal, sizeof(malfunction) - sizeof(long), car->ID,IPC_NOWAIT) == 0)
             if(car->state != SECURITY && car->state != MALFUNTION)
                 change_state(car, MALFUNTION);
-        sleep(1/config->T_units_second);
+        usleep(1 * 1000000 /config->T_units_second);
     }
     if(car->current_fuel < 0)
         change_state(car, GAVE_UP);
@@ -132,15 +132,13 @@ void *car_init(void * arg){
 void change_state(car_struct *car, int state){
     car->state = state;
     if(car->state == SECURITY || car->state == MALFUNTION){
-
-
-        
-    }
-
-    char line [READ_BUFF];
-    snprintf(line, READ_BUFF, "Car %d from team %s %s",car->number, this_team->name, car_states[state]);
+        pthread_mutex_lock(&check_box);
+        if(this_team->box_status == FREE)
+            this_team->box_status = RESERVED;
+        pthread_mutex_unlock(&check_box);
+    }    
     sem_wait(&this_team->write_pipe);
-    write(this_team->comunication_pipe[1], line, strlen(line) + 1);
+    write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
 
 void Car_access_Box(car_struct *this_car){
@@ -148,10 +146,10 @@ void Car_access_Box(car_struct *this_car){
     this_team->box_status = BUSY;
     pthread_mutex_unlock(&check_box);
     this_car->current_fuel = config->Fuel_tank_capacity;
-    sleep(2/config->T_units_second);
+    usleep(2 * 1000000 /config->T_units_second);
     if(this_car->state == MALFUNTION){
-        int repair_time = rand() % (config->T_Box_Max - config->T_Box_min) + config->T_Box_min;
-        sleep(repair_time/config->T_units_second);
+        float repair_time = rand() % (config->T_Box_Max - config->T_Box_min) + config->T_Box_min;
+        usleep(repair_time * 1000000 /config->T_units_second);
     }
     change_state(this_car, RACE);
 }

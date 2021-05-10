@@ -6,8 +6,8 @@
 //Cria processos Team_manager
 #include "race_manager.h"
 
+char car_states[7][30] = {"is giving up!", "hasn't started!", "entered the pits!", "entered security mode", "is Racing!", "Finished!", "is now Malfuntioning"};
 
-int **pipes;
 void race_manager_init(){
 
 #ifdef DEBUG
@@ -23,7 +23,11 @@ void race_manager_init(){
 
     fd_set read_set;
     team_stuct *team_temp;
+    car_struct *temp_car = NULL;
+    int finished_cars = 0;
     while (TRUE){
+        if(finished_cars == race->number_of_cars && race->status == STARTED)
+            break;
         //Open Named Pipe
         named_pipe = open(PIPENAME, O_RDWR | O_NONBLOCK);
         FD_ZERO(&read_set);
@@ -45,12 +49,14 @@ void race_manager_init(){
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
-                    if((readed_chars = read(team_temp->comunication_pipe[0], line, READ_BUFF)) > 0){
-                        line[readed_chars-1] = '\0';
+                    if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
+                        snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
                         print(line);
                         sem_post(&team_temp->write_pipe);
-                        
+                        if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
+                            finished_cars++;
                     }
+                    
                 }
                 team_temp = (team_stuct *)(team_temp + 1);
             }
@@ -59,10 +65,10 @@ void race_manager_init(){
         close(named_pipe);
     }
     
-    free(line);
     //espera todas as equipas terminarem
     for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
-
+    print("RACE MANAGER END");
+    exit(0);
 }
 
 void create_pipes(){
@@ -152,7 +158,7 @@ char* add_car(char *line){
     car_team->number_team_cars++;
     
     free(line_splited);
-   
+    race->number_of_cars++;
     return concat(CAR_ADDED, line);
 }
 
