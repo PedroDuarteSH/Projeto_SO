@@ -5,9 +5,9 @@
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
 #include "race_manager.h"
-#define READ_BUFF 512
 
 
+int **pipes;
 void race_manager_init(){
 
 #ifdef DEBUG
@@ -16,20 +16,16 @@ void race_manager_init(){
 #endif
 
     char line[READ_BUFF];
-    int named_pipe, readed_chars, p_car_number;
-    int max_number_cars = config->number_of_teams * config->max_cars_team;
+    int named_pipe, readed_chars;
+
     clean_data();
-    create_pipes(max_number_cars);
-    //Read Pipes
+    create_pipes();
+
     fd_set read_set;
-    //Car temp to read cars unnamed pipes
     team_stuct *team_temp;
     while (TRUE){
         //Open Named Pipe
-        if ((named_pipe = open(PIPENAME, O_RDONLY | O_NONBLOCK)) < 0){
-            print("Cannot open pipe for reading in race_manager");
-            clear_resources();
-        }
+        named_pipe = open(PIPENAME, O_RDWR | O_NONBLOCK);
         FD_ZERO(&read_set);
         FD_SET(named_pipe, &read_set);
         team_temp = (team_stuct *)(first_team);
@@ -49,20 +45,18 @@ void race_manager_init(){
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
-
-                    car_struct *temp_car;
-                    if(read(team_temp->comunication_pipe[0], temp_car, sizeof(car_struct)) == -1)
-                        perror("Error reding from named pipe: ");
-                    
-                
-                    //FAZER UNNAMED PIPE
+                    if((readed_chars = read(team_temp->comunication_pipe[0], line, READ_BUFF)) > 0){
+                        line[readed_chars-1] = '\0';
+                        print(line);
+                        sem_post(&team_temp->write_pipe);
+                        
+                    }
                 }
                 team_temp = (team_stuct *)(team_temp + 1);
             }
             
         }
-
-
+        close(named_pipe);
     }
     
     free(line);
@@ -70,8 +64,6 @@ void race_manager_init(){
     for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
 
 }
-
-
 
 void create_pipes(){
     team_stuct * team_temp = (team_stuct *)(first_team);
@@ -119,7 +111,6 @@ char* add_car(char *line){
     if(verify_car_command(temp, line_splited) == FALSE) return concat(WRONG_COMMAND, line);
     free(temp);
  
-    
     //Verify parsing errors
     int parse_error = 0;
     
@@ -151,15 +142,13 @@ char* add_car(char *line){
     //Initiate cars data
     car_to_add->team_number = car_team->team_number;
     car_to_add->state = NOTSTARTED;
-    car_to_add->box_stops = 0;
-    car_to_add->current_fuel = config->Fuel_tank_capacity;
+    //car_to_add->box_stops = 0;
+    car_to_add->current_fuel = (float) config->Fuel_tank_capacity;
     car_to_add->number = car_number;
     car_to_add->speed = speed;
     car_to_add->consumption = consumption;
     car_to_add->reliability = reliability;
 
-
-    
     car_team->number_team_cars++;
     
     free(line_splited);
@@ -174,9 +163,9 @@ car_struct *find_car_pos(team_stuct *car_team, int number){
         if(temp_car->number == number){
             return NULL;
         }        
-        else if(temp_car->number == EMPTY)
+        else if(temp_car->number == EMPTY)    
             return temp_car;
-       
+        
         temp_car = (car_struct *)(temp_car+1);
     }
     return NULL;

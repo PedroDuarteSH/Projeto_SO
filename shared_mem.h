@@ -21,8 +21,8 @@
 #include <signal.h>
 
 
-//#define DEBUG
-
+#define DEBUG
+#define READ_BUFF 512
 #define PIPENAME "CARS"
 
 
@@ -41,14 +41,13 @@
 #define RESERVED 2
 
 //car status
-#define GAVE_UP -2
-#define NOTSTARTED -1
-#define BOX 0
-#define SECURITY 1
-#define RACE 2
-#define FINISHED 3
-
-
+#define GAVE_UP 0
+#define NOTSTARTED 1
+#define BOX 2
+#define SECURITY 3
+#define RACE 4
+#define FINISHED 5
+#define MALFUNTION 6
 
 //variable defines
 #define CAR_COMMAND_SIZE 11
@@ -88,18 +87,19 @@ typedef struct team_stuct{
     int box_Stops;
     int number_team_cars;
     int comunication_pipe[2];
-    pthread_mutex_t access_box;
+    sem_t write_pipe;
 }team_stuct;
 
 typedef struct car_struct{
+    int ID;
     int number;
     int team_number;
     int state;
     float consumption;
     int speed;
     int reliability;
-    int current_fuel;
-    int distance;
+    float current_fuel;
+    float distance;
     int completed_laps;
 }car_struct;
 

@@ -11,7 +11,9 @@
 void change_state(car_struct *car, int state);
 team_stuct *this_team;
 pthread_t *cars;
-int *box_requests;
+//int *box_requests;
+char car_states[7][30] = {"is giving up!", "hasn't started!", "entered the pits!", "entered security mode", "is Racing!", "Finished!", "is now Malfuntioning"};
+
 pthread_mutex_t access_box = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
@@ -27,11 +29,6 @@ void team_manager_start(team_stuct *self){
 
     for(int i = 0;i < this_team->number_team_cars;i++){
         pthread_create(&cars[i],NULL,car_init,team_cars[i]);
-    }
-
-    while(TRUE){
-
-
     }
 
 
@@ -65,28 +62,28 @@ car_struct **find_team_cars(){
 
 void *car_init(void * arg){
     car_struct *car = (car_struct *)(arg);
-    char buffer [100];
+    
+
 #ifdef DEBUG
+    char buffer [100];
     snprintf (buffer, 100, "Team %s :Car number %d is WAITING FOR RACE",this_team->name, car->number);
     print(buffer);
 #endif
 
     //Calculate needed fuel to 4 laps
-    int distance = config->lap_distance * 4;
-    float cons_4_laps = distance/car->speed * car->consumption;
-
+    int distance_4_laps = config->lap_distance * 4;
+    float cons_4_laps = distance_4_laps/car->speed * car->consumption;
     //Car ready to start
     sem_post(&race->cars_ready);
     
     //Wait for race to start
     sem_wait(&race->race_begin);
 
-
     change_state(car, RACE);
-    
+    malfunction mal;
     while(TRUE){
-        if(car->current_fuel < cons_4_laps/2){
-            if(car->current_fuel < 0)break;
+        if(car->current_fuel < 0)break;
+        if(car->current_fuel < cons_4_laps/2 && car->state == RACE){
             change_state(car, SECURITY);
         }
 
@@ -96,22 +93,24 @@ void *car_init(void * arg){
                 break;
             pthread_mutex_lock(&check_box);
             if(car->current_fuel < cons_4_laps && this_team->box_status == FREE){
-                this_team->box_status = BUSY;
-                pthread_mutex_unlock(&check_box);
-                //Entrar na box
-                
+                Car_access_Box(car);
             }
+            else pthread_mutex_unlock(&check_box);
             car->distance-=config->lap_distance;
             car->completed_laps++;
         }
 
-        car->distance += car->speed;
-        car->current_fuel -= car->consumption;
-
-        if(msgrcv(msq_id,NULL, sizeof(malfunction) - sizeof(long), car->team_number * car->number,IPC_NOWAIT) == 0)
-            change_state(car, SECURITY);
-
-        sleep(1);
+        if(car->state == SECURITY){
+            car->distance += car->speed * 0.3;
+            car->current_fuel -= car->consumption * 0.4;
+        }
+        else{
+            car->distance += car->speed;
+            car->current_fuel -= car->consumption;
+        }
+        if(msgrcv(msq_id, &mal, sizeof(malfunction) - sizeof(long), car->ID,IPC_NOWAIT) == 0)
+            if(car->state != SECURITY)
+                change_state(car, MALFUNTION);
     }
     if(car->current_fuel < 0)
         change_state(car, GAVE_UP);
@@ -122,10 +121,22 @@ void *car_init(void * arg){
 
 
 void change_state(car_struct *car, int state){
-    car->state = state;
-    if(state == SECURITY){
-        pthread_mutex_lock(&check_box);
-    }
-   
-    write(this_team->comunication_pipe[1], car, sizeof(car_struct *));
+    car->state = SECURITY;
+    if(state != MALFUNTION)
+        car->state = state;
+    
+    char line [READ_BUFF];
+    snprintf(line, READ_BUFF, "Car %d from team %s %s",car->number, this_team->name, car_states[state]);
+    sem_wait(&this_team->write_pipe);
+    write(this_team->comunication_pipe[1], line, strlen(line) + 1);
+}
+
+void Car_access_Box(car_struct *this_car){
+
+    this_team->box_status = BUSY;
+    pthread_mutex_unlock(&check_box);
+    this_car->consumption = config->Fuel_tank_capacity;
+    int repair_time = rand() % config->T_Box_Max;
+    sleep(repair_time);
+    change_state(car, RACE);
 }

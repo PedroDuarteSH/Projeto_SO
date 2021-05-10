@@ -9,6 +9,12 @@ void clear_resources(int signum){
   //Destroy unnamed semaphores
   sem_destroy(&race->cars_ready);
   sem_destroy(&race->race_begin);
+  team_stuct *temp_team = first_team;
+  for (int i = 0; i < config->number_of_teams; i++){
+    sem_destroy(&temp_team->write_pipe);
+    temp_team = temp_team + 1;
+  }
+    
   
   //Detach shared memory from processes
   shmdt(race);
