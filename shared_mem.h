@@ -76,6 +76,8 @@ typedef struct config_struct{
 
 typedef struct race_struct{
     int status; //Started, ended, interruped
+    int number_of_cars;
+    int finished_cars;
     sem_t race_begin;
     sem_t cars_ready;
 }race_struct;
@@ -84,7 +86,6 @@ typedef struct team_stuct{
     int team_number;
     char name[STR_LENGHT]; 
     int box_status;
-    int box_Stops;
     int number_team_cars;
     int comunication_pipe[2];
     sem_t write_pipe;
@@ -101,6 +102,10 @@ typedef struct car_struct{
     float current_fuel;
     float distance;
     int completed_laps;
+    
+    int box_stops;
+    int malfuntions_n;
+    int finish_place;
 }car_struct;
 
 

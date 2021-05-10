@@ -6,7 +6,7 @@ void malfunction_manager_init(){
     malfunction send_msg;
     int probability = 0;
     while(1){
-        sleep(config->T_breakdown_interval / config->T_units_second);
+        usleep((config->T_breakdown_interval) * 1000000 / config->T_units_second);
         car_struct * temp_car = first_car;
         for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
             if(temp_car->number != EMPTY && temp_car->state != GAVE_UP && temp_car->state != FINISHED){
