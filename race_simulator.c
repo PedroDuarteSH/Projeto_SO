@@ -19,12 +19,14 @@ int main(){
   configs = read_config_file();
   if (configs == NULL) printf("Error reading file or invalid number of teams\ncheck if your file is config.txt or the number of teams (line 3) is bigger than 3!");
   process_config_file(configs);
+  free(configs);
+  
   init_log();
  
   //generate the shared memory and control mechanisms
   init_program();
 
-  free(configs);
+  
   
  
   //Create Named Pipe
@@ -32,23 +34,14 @@ int main(){
   //Create MSQ
   create_msq();
 
-  pid_t race_manager_process = fork();
-  if(race_manager_process == 0){
-    signal(SIGINT, clear_resources);
-    print("Starting race process manager...");
-    //RACE MANAGER PROCESS
-    race_manager_init();
-    exit(0);
-  }
-  pid_t malfunction_manager_process = fork();
-  if(malfunction_manager_process == 0){
-    signal(SIGINT, clear_resources);
-    print("Created Malfuntion process");
-    sem_wait(&race->race_begin);
-    print("Malfuntion process initiated");
-    malfunction_manager_init();
-    exit(0);
-  }
+  malfunction_manager_process = fork();
+  if(malfunction_manager_process == 0) malfunction_manager_init();
+  
+  race_manager_process = fork();
+  if(race_manager_process == 0) race_manager_init();
+  
+  
+  
   //Gestão de sinais
   signal(SIGINT, clear_resources);
   signal(SIGTSTP, print_statistics);
@@ -88,7 +81,6 @@ void clean_data(){
   team_stuct *temp_team = first_team;
   for (int i = 0; i < config->number_of_teams; i++){
     temp_team->team_number = EMPTY;
-    sem_init(&temp_team->write_pipe, 1, 1);
     temp_team = (team_stuct *)(temp_team + 1);
   }
   car_struct * temp_car = first_car;

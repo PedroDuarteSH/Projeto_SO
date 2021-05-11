@@ -5,39 +5,87 @@
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
 #include "race_manager.h"
-
+void read_pipes();
+void finish_race();
+void reset_race();
 char car_states[7][30] = {"is giving up...", "hasn't started!", "entered the pits...", "entered security mode!", "is on Track!", "Finished!", "is now Malfuntioning..."};
 
+char line[READ_BUFF];
+int named_pipe, readed_chars;
+int car_classification;
+fd_set read_set;
+
+void finish_exit(int signum){
+    if(race->status == STARTED){
+        finish_race();
+    }
+    clear_resources(SIGINT);
+    exit(0);
+}
+
+void interrupt_race(int signum){
+    print("RECIEVED RACE INTERRUPTION");
+    finish_race();
+    reset_race();
+    read_pipes();
+}
+
+void reset_race(){
+    car_classification = 0;
+    race->finished_cars = 0;
+    race->status = NOT_STARTED;
+    FD_ZERO(&read_set);
+}
+
+void finish_race(){
+    if(race->status == STARTED){
+        race->status = INTERRUPTED;
+        read_pipes();
+        kill(malfunction_manager_process, SIGUSR1);
+        for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
+        print("RACE FINISHED!");
+    }
+}
+
 void race_manager_init(){
+    signal(SIGINT, finish_exit);
+    signal(SIGUSR1, interrupt_race);
 
 #ifdef DEBUG
+    printf("Race Manager PID: %d\n", getpid());
+
+    print("Starting race process manager...");
     print_config_file();
     fflush(stdout);
 #endif
 
-    char line[READ_BUFF];
-    int named_pipe, readed_chars;
-
     clean_data();
     create_pipes();
+    
+    reset_race();
+    read_pipes();
+    
+}
 
-    fd_set read_set;
-    team_stuct *team_temp;
-    car_struct *temp_car = NULL;
-    int car_classification = 0;
+void read_pipes(){
     while (TRUE){
-        if(race->finished_cars == race->number_of_cars && race->status == STARTED)
+        team_stuct *team_temp;
+        car_struct *temp_car;
+        if(race->finished_cars == race->number_of_cars && race->status == STARTED){
+            race->status = NOT_STARTED;
+            kill(main_pid, SIGTSTP);
             break;
+        }
+                
         //Open Named Pipe
         named_pipe = open(PIPENAME, O_RDWR | O_NONBLOCK);
-        FD_ZERO(&read_set);
+
         FD_SET(named_pipe, &read_set);
         team_temp = (team_stuct *)(first_team);
         for (int i = 0; i < config->number_of_teams; i++){
             FD_SET(team_temp->comunication_pipe[0], &read_set);
             team_temp = (team_stuct *)(team_temp + 1);
         }
-
         if(select(named_pipe+1, &read_set, NULL, NULL, NULL) > 0){
             if(FD_ISSET(named_pipe, &read_set)){
                 if((readed_chars = read(named_pipe, line, READ_BUFF)) == -1)
@@ -52,7 +100,6 @@ void race_manager_init(){
                     if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
                         snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
                         print(line);
-                        sem_post(&team_temp->write_pipe);
                         if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
                             race->finished_cars++;
                         if(temp_car->state == FINISHED){
@@ -66,11 +113,9 @@ void race_manager_init(){
         }
         close(named_pipe);
     }
-    //espera todas as equipas terminarem
-    for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
-    print("RACE MANAGER END");
-    exit(0);
+
 }
+
 
 void create_pipes(){
     team_stuct * team_temp = (team_stuct *)(first_team);

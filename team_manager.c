@@ -15,14 +15,10 @@ pthread_t *cars;
 
 pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
-void cleanup(){
-    pthread_mutex_destroy(&check_box);
-    clear_resources(9);
-}
-
 
 void team_manager_start(team_stuct *self){
-    signal(SIGINT, cleanup);
+    signal(SIGINT, SIG_IGN);
+    signal(SIGUSR1, SIG_IGN);
     this_team = self;
     
 #ifdef DEBUG
@@ -48,7 +44,7 @@ void team_manager_start(team_stuct *self){
 
     free(cars);
     free(team_cars);
-
+    pthread_mutex_destroy(&check_box);  
 
     exit(0);
 }
@@ -93,10 +89,16 @@ void *car_init(void * arg){
         
         //Passing box
         if(car->distance >= config->lap_distance){
+            if(race->status == INTERRUPTED){
+                change_state(car, GAVE_UP);
+                pthread_exit(NULL);
+            }
+                
             if(car->completed_laps == config->lap_number){
                 car->distance = 0;
                 break;
             }
+            
                 
             pthread_mutex_lock(&check_box);
             if(car->state == SECURITY || car->state != MALFUNTION)
@@ -139,7 +141,6 @@ void change_state(car_struct *car, int state){
             this_team->box_status = RESERVED;
         pthread_mutex_unlock(&check_box);
     }    
-    sem_wait(&this_team->write_pipe);
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
 

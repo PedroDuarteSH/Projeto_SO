@@ -7,37 +7,39 @@
 
 void clear_resources(int signum){
   //Destroy unnamed semaphores
-  sem_destroy(&race->cars_ready);
-  sem_destroy(&race->race_begin);
-  team_stuct *temp_team = first_team;
-  for (int i = 0; i < config->number_of_teams; i++){
-    sem_destroy(&temp_team->write_pipe);
-    temp_team = temp_team + 1;
+  if(sem_destroy(&race->cars_ready) == -1){
+    #ifdef DEBUG
+    print(concat("Error destroying cars_begin semaphore: ", strerror(errno)));
+    #endif
   }
-    
-  
+ 
+  if(sem_destroy(&race->race_begin) == -1){
+    #ifdef DEBUG
+    print(concat("Error destroying race_begin semaphore: ", strerror(errno)));
+    #endif  
+  }
+
   //Detach shared memory from processes
   shmdt(race);
-  //Destroy named semaphores
   
-
+  //Destroy named semaphores
   if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
     print("SIMULATOR CLOSING");
-    wait(NULL); 
-    wait(NULL);
+    waitpid(race_manager_process, NULL, 0); 
+    waitpid(malfunction_manager_process, NULL, 0);
     //Eliminar memória partilhada
     if(shm_id >= 0)
       remove_shm();
     if(msq_id >= 0)
       remove_msq();
     
+    //Destroy named pipe and semaphore
     unlink(PIPENAME);
-   
-    fclose(log_file);
     sem_unlink(LOG_SEM_NAME);
   }
-  sem_close(log_semaphore); 
+  sem_close(log_semaphore);
+  fclose(log_file);
   exit(0);
 }
 void remove_shm(){

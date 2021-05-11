@@ -80,6 +80,7 @@ typedef struct race_struct{
     int finished_cars;
     sem_t race_begin;
     sem_t cars_ready;
+    sem_t change_status;
 }race_struct;
 
 typedef struct team_stuct{
@@ -88,7 +89,6 @@ typedef struct team_stuct{
     int box_status;
     int number_team_cars;
     int comunication_pipe[2];
-    sem_t write_pipe;
 }team_stuct;
 
 typedef struct car_struct{
@@ -137,4 +137,10 @@ sem_t *log_semaphore;
 race_struct *race;
 team_stuct *first_team;
 car_struct *first_car;
+
+//Processes PIDS
+pid_t malfunction_manager_process;
+pid_t race_manager_process;
+
+
 #endif
