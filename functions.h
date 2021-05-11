@@ -29,6 +29,9 @@ void strip(char *phrase);
 //Log_writing
 void print(char *result);
 
+
+//Print statistics
+void print_statistics(int signum);
 //Usefull information
 /* Config int[] format
     0 - T_units_second;

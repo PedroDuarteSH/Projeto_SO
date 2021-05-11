@@ -33,7 +33,7 @@
 #define NOT_STARTED 0
 #define STARTED 1
 #define INTERRUPTED 2
-
+#define TERMINATED 3
 
 //Box status
 #define FREE 0

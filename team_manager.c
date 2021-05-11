@@ -64,6 +64,11 @@ car_struct **find_team_cars(){
 void *car_init(void * arg){
     car_struct *car = (car_struct *)(arg);
     
+    car->state = NOTSTARTED;
+    car->box_stops = 0;
+    car->malfuntions_n = 0;
+    car->current_fuel = (float) config->Fuel_tank_capacity;
+    car->finish_place = 0;
 
 #ifdef DEBUG
     char buffer [100];

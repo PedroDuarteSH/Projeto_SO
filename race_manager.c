@@ -8,7 +8,13 @@
 void read_pipes();
 void finish_race();
 void reset_race();
-char car_states[7][30] = {"is giving up...", "hasn't started!", "entered the pits...", "entered security mode!", "is on Track!", "Finished!", "is now Malfuntioning..."};
+char car_states[7][30] = {"is giving up...",
+                            "hasn't started!",
+                            "entered the pits...",
+                            "entered security mode!",
+                            "is on Track!",
+                            "Finished!",
+                            "is now Malfuntioning..."};
 
 char line[READ_BUFF];
 int named_pipe, readed_chars;
@@ -26,8 +32,9 @@ void finish_exit(int signum){
 void interrupt_race(int signum){
     print("RECIEVED RACE INTERRUPTION");
     finish_race();
+    print_statistics(0);
     reset_race();
-    read_pipes();
+   
 }
 
 void reset_race(){
@@ -40,10 +47,9 @@ void reset_race(){
 void finish_race(){
     if(race->status == STARTED){
         race->status = INTERRUPTED;
-        read_pipes();
-        kill(malfunction_manager_process, SIGUSR1);
         for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
         print("RACE FINISHED!");
+        kill(malfunction_manager_process, SIGUSR1);
     }
 }
 
@@ -63,7 +69,10 @@ void race_manager_init(){
     create_pipes();
     
     reset_race();
-    read_pipes();
+    while(TRUE){
+        read_pipes();
+    }
+    
     
 }
 
@@ -72,8 +81,7 @@ void read_pipes(){
         team_stuct *team_temp;
         car_struct *temp_car;
         if(race->finished_cars == race->number_of_cars && race->status == STARTED){
-            race->status = NOT_STARTED;
-            kill(main_pid, SIGTSTP);
+            race->status = TERMINATED;
             break;
         }
                 
@@ -193,15 +201,11 @@ char* add_car(char *line){
         
     //Initiate cars data
     car_to_add->team_number = car_team->team_number;
-    car_to_add->state = NOTSTARTED;
-    car_to_add->box_stops = 0;
-    car_to_add->malfuntions_n = 0;
-    car_to_add->current_fuel = (float) config->Fuel_tank_capacity;
     car_to_add->number = car_number;
     car_to_add->speed = speed;
     car_to_add->consumption = consumption;
     car_to_add->reliability = reliability;
-    car_to_add->finish_place = 0;
+    
 
     car_team->number_team_cars++;
     
