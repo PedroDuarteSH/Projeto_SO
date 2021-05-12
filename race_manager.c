@@ -5,65 +5,125 @@
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
 #include "race_manager.h"
+void read_pipes();
+void finish_race();
+void reset_race();
+char car_states[7][30] = {"is giving up...",
+                            "hasn't started!",
+                            "entered the pits...",
+                            "entered security mode!",
+                            "is on Track!",
+                            "Finished!",
+                            "is now Malfuntioning..."};
 
+char line[READ_BUFF];
+int named_pipe, readed_chars;
+int car_classification;
+fd_set read_set;
 
-int **pipes;
+void finish_exit(int signum){
+    if(race->status == STARTED){
+        finish_race();
+    }
+    clear_resources(SIGINT);
+    exit(0);
+}
+
+void interrupt_race(int signum){
+    print("RECIEVED RACE INTERRUPTION");
+    finish_race();
+    print_statistics(0);
+    reset_race();
+   
+}
+
+void reset_race(){
+    car_classification = 0;
+    race->finished_cars = 0;
+    race->status = NOT_STARTED;
+    FD_ZERO(&read_set);
+}
+
+void finish_race(){
+    if(race->status == STARTED){
+        race->status = INTERRUPTED;
+        for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
+        print("RACE FINISHED!");
+        kill(malfunction_manager_process, SIGUSR1);
+    }
+}
+
 void race_manager_init(){
+    signal(SIGINT, finish_exit);
+    signal(SIGUSR1, interrupt_race);
 
 #ifdef DEBUG
+    printf("Race Manager PID: %d\n", getpid());
+
+    print("Starting race process manager...");
     print_config_file();
     fflush(stdout);
 #endif
 
-    char line[READ_BUFF];
-    int named_pipe, readed_chars;
-
     clean_data();
     create_pipes();
+    
+    reset_race();
+    while(TRUE){
+        read_pipes();
+    }
+    
+    
+}
 
-    fd_set read_set;
-    team_stuct *team_temp;
+void read_pipes(){
     while (TRUE){
+        team_stuct *team_temp;
+        car_struct *temp_car;
+        if(race->finished_cars == race->number_of_cars && race->status == STARTED){
+            race->status = TERMINATED;
+            break;
+        }
+                
         //Open Named Pipe
         named_pipe = open(PIPENAME, O_RDWR | O_NONBLOCK);
-        FD_ZERO(&read_set);
+
         FD_SET(named_pipe, &read_set);
         team_temp = (team_stuct *)(first_team);
         for (int i = 0; i < config->number_of_teams; i++){
             FD_SET(team_temp->comunication_pipe[0], &read_set);
             team_temp = (team_stuct *)(team_temp + 1);
         }
-
         if(select(named_pipe+1, &read_set, NULL, NULL, NULL) > 0){
             if(FD_ISSET(named_pipe, &read_set)){
                 if((readed_chars = read(named_pipe, line, READ_BUFF)) == -1)
                     perror("Error reding from named pipe: ");
                 line[readed_chars-1] = '\0';
-                if (race->status == NOT_STARTED) print(process_command(line));
-                else print(RACE_STARTED_ERR);
+                if (race->status == STARTED) print(RACE_STARTED_ERR);
+                else print(process_command(line));
             }
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
-                    if((readed_chars = read(team_temp->comunication_pipe[0], line, READ_BUFF)) > 0){
-                        line[readed_chars-1] = '\0';
+                    if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
+                        snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
                         print(line);
-                        sem_post(&team_temp->write_pipe);
-                        
+                        if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
+                            race->finished_cars++;
+                        if(temp_car->state == FINISHED){
+                            car_classification++;
+                            temp_car->finish_place = car_classification;
+                        }
                     }
                 }
                 team_temp = (team_stuct *)(team_temp + 1);
             }
-            
         }
         close(named_pipe);
     }
-    
-    free(line);
-    //espera todas as equipas terminarem
-    for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
 
 }
+
 
 void create_pipes(){
     team_stuct * team_temp = (team_stuct *)(first_team);
@@ -141,18 +201,16 @@ char* add_car(char *line){
         
     //Initiate cars data
     car_to_add->team_number = car_team->team_number;
-    car_to_add->state = NOTSTARTED;
-    //car_to_add->box_stops = 0;
-    car_to_add->current_fuel = (float) config->Fuel_tank_capacity;
     car_to_add->number = car_number;
     car_to_add->speed = speed;
     car_to_add->consumption = consumption;
     car_to_add->reliability = reliability;
+    
 
     car_team->number_team_cars++;
     
     free(line_splited);
-   
+    race->number_of_cars++;
     return concat(CAR_ADDED, line);
 }
 

@@ -14,7 +14,6 @@ void init_program();
 void init_log();
 void create_named_pipe(char *name);
 void create_msq();
-void print_statistics();
 //Usefull information
 /* Config int[] format
     0 - T_units_second;
