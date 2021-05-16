@@ -17,9 +17,11 @@ pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
 
 void team_manager_start(team_stuct *self){
+    this_team = self;
     signal(SIGINT, SIG_IGN);
     signal(SIGUSR1, SIG_IGN);
-    this_team = self;
+    
+    close_otherPipes();
     
 #ifdef DEBUG
     print(concat("INITIATING TEAM CARS ARRAY ", this_team->name));
@@ -45,10 +47,22 @@ void team_manager_start(team_stuct *self){
     free(cars);
     free(team_cars);
     pthread_mutex_destroy(&check_box);  
-
     exit(0);
 }
 
+void close_otherPipes(){
+    team_stuct *temp_team = first_team;
+    for (int i = 0; i < config->number_of_teams; i++){
+        if(temp_team != this_team){
+            close(temp_team->comunication_pipe[0]);
+            close(temp_team->comunication_pipe[1]);
+        }
+        else{
+            close(temp_team->comunication_pipe[0]);
+        }
+        temp_team = temp_team + 1;
+    }
+} 
 
 car_struct **find_team_cars(){
     car_struct ** team_cars = malloc(sizeof(car_struct) * this_team->number_team_cars);
@@ -69,7 +83,7 @@ void *car_init(void * arg){
     car->malfuntions_n = 0;
     car->current_fuel = (float) config->Fuel_tank_capacity;
     car->finish_place = 0;
-
+    car->completed_laps = 0;
 #ifdef DEBUG
     char buffer [100];
     snprintf (buffer, 100, "Team %s :Car number %d is WAITING FOR RACE",this_team->name, car->number);
@@ -94,7 +108,10 @@ void *car_init(void * arg){
         
         //Passing box
         if(car->distance >= config->lap_distance){
+            car->distance-=config->lap_distance;
+            car->completed_laps++;
             if(race->status == INTERRUPTED){
+                car->distance = 0;
                 change_state(car, GAVE_UP);
                 pthread_exit(NULL);
             }
@@ -111,8 +128,7 @@ void *car_init(void * arg){
             else if(car->current_fuel < cons_4_laps && this_team->box_status == FREE)
                 Car_access_Box(car);
             else pthread_mutex_unlock(&check_box);
-            car->distance-=config->lap_distance;
-            car->completed_laps++;
+
         }
 
         if(car->state == SECURITY || car->state == MALFUNTION){

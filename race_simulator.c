@@ -4,10 +4,10 @@
 #include "race_simulator.h"
 
 int main(){
-  //Ignora o sinal SIG_INT até fazer todas as inicializações
+  //Ignora o sinal SIG_INT e SIGTSTP até fazer todas as inicializações
   signal(SIGINT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
-
+  signal(SIGUSR1, SIG_IGN);
   //Save Process Pid to clean it
   main_pid = getpid();
   //Make IDS to know that is not created
