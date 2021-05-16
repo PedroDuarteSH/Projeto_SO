@@ -5,9 +5,7 @@
 //Mostra classificação Final e as equipas ainda em jogo
 //Cria processos Team_manager
 #include "race_manager.h"
-void read_pipes();
-void finish_race();
-void reset_race();
+
 char car_states[7][30] = {"is giving up...",
                             "hasn't started!",
                             "entered the pits...",
@@ -15,49 +13,6 @@ char car_states[7][30] = {"is giving up...",
                             "is on Track!",
                             "Finished!",
                             "is now Malfuntioning..."};
-
-char line[READ_BUFF];
-int named_pipe, readed_chars;
-int car_classification;
-fd_set read_set;
-
-void finish_exit(int signum){
-    if(race->status == STARTED){
-        interrupt_race(signum);
-        read_pipes();
-        for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
-    }
-    close_pipes();
-    clear_resources(SIGINT);
-    exit(0);
-}
-
-void interrupt_race(int signum){
-    print("RECIEVED RACE INTERRUPTION");
-    if(race->status == STARTED){
-        race->status = INTERRUPTED;
-    }
-}
-
-void reset_race(){
-    close_pipes();
-    car_classification = 0;
-    race->finished_cars = 0;
-    race->status = NOT_STARTED;
-    create_pipes();
-    FD_ZERO(&read_set);
-}
-
-void close_pipes(){
-    team_stuct * team_temp = (team_stuct *)(first_team);
-    for (int i = 0; i < config->number_of_teams; i++){
-        close(team_temp->comunication_pipe[0]);
-        close(team_temp->comunication_pipe[1]);
-        team_temp = (team_stuct *)(team_temp + 1);
-    }
-
-
-}
 
 void race_manager_init(){
     signal(SIGINT, finish_exit);
@@ -318,3 +273,38 @@ int verify_teams(){
     return TRUE;
 }
 
+void finish_exit(int signum){
+    if(race->status == STARTED){
+        interrupt_race(signum);
+        read_pipes();
+        for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
+    }
+    close_pipes();
+    clear_resources(SIGINT);
+    exit(0);
+}
+
+void interrupt_race(int signum){
+    print("RECIEVED RACE INTERRUPTION");
+    if(race->status == STARTED){
+        race->status = INTERRUPTED;
+    }
+}
+
+void reset_race(){
+    close_pipes();
+    car_classification = 0;
+    race->finished_cars = 0;
+    race->status = NOT_STARTED;
+    create_pipes();
+    FD_ZERO(&read_set);
+}
+
+void close_pipes(){
+    team_stuct * team_temp = (team_stuct *)(first_team);
+    for (int i = 0; i < config->number_of_teams; i++){
+        close(team_temp->comunication_pipe[0]);
+        close(team_temp->comunication_pipe[1]);
+        team_temp = (team_stuct *)(team_temp + 1);
+    }
+}

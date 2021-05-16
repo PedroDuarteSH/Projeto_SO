@@ -47,7 +47,18 @@ char* process_command(char *line);
         //if verify teams == true
             void start_race();
         
+void read_pipes();
+void finish_race();
+void finish_exit();
+void interrupt_race(int signum);
+void reset_race();
+void close_pipes();
 
+
+char line[READ_BUFF];
+int named_pipe, readed_chars;
+int car_classification;
+fd_set read_set;
 
 
 #endif
