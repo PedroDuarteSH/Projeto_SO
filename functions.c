@@ -19,14 +19,13 @@ void clear_resources(int signum){
     #endif  
   }
 
-  
-  
   //Destroy named semaphores
   if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
-    waitpid(race_manager_process, NULL, 0); 
+    waitpid(race_manager_process, NULL, 0);
     waitpid(malfunction_manager_process, NULL, 0);
     print_statistics(SIGTSTP);
+    
     print("SIMULATOR CLOSING");
     //Eliminar memória partilhada
     shmdt(race);
@@ -39,13 +38,13 @@ void clear_resources(int signum){
     unlink(PIPENAME);
     sem_unlink(LOG_SEM_NAME);
   }
-  else 
-    //Detach shared memory from processes
-    shmdt(race);
+  else shmdt(race);
   sem_close(log_semaphore);
   fclose(log_file);
   exit(0);
 }
+
+
 void remove_shm(){
   if(shmctl(shm_id, IPC_RMID, NULL) == -1){
 #ifdef DEBUG
@@ -170,8 +169,6 @@ void print_statistics(int signum){
     free(output);
     return;
   }
-
-
   
   int t_malfunc_num = 0, t_box_stops = 0;
   
@@ -183,11 +180,11 @@ void print_statistics(int signum){
   
   car_struct *temp;
   for (int i = 0; i < 6; i++){
-    for (; i < race->finished_cars && i < 5; i++){
+    for (int k = 0; i < race->finished_cars && k < 5; k++){
       temp = first_car;
       for (int j = 0; j < config->number_of_teams * config->max_cars_team; j++){
         if(temp->finish_place == (i+1))
-          best_5_cars[i] = temp;
+          best_5_cars[i++] = temp;
         temp = temp + 1;
       }
     }
@@ -195,7 +192,7 @@ void print_statistics(int signum){
     for (int j = 0; j < config->number_of_teams * config->max_cars_team; j++){
       used = 0;
       if(temp->number != EMPTY){
-        if(i == 0){
+        if(i == 5){
           t_malfunc_num += temp->malfuntions_n;
           t_box_stops += temp->box_stops;
         }
@@ -217,25 +214,27 @@ void print_statistics(int signum){
       temp = temp + 1;
     }
   }
+  
   char line[READ_BUFF];
-  team_stuct *temp_team;
+  team_stuct *t;
+  
   output = concat(output, "\tFirst placed cars:\n");
+
   for (int i = 0; i < 5; i++){
-    temp_team = first_team + best_5_cars[i]->team_number; 
-    snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f | Box accesses: %d \n", (i+1), temp_team->name, best_5_cars[i]->number, (temp_team->team_number+1), best_5_cars[i]->completed_laps, best_5_cars[i]->distance, best_5_cars[i]->box_stops);
+    t = first_team + best_5_cars[i]->team_number; 
+    snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f | Box accesses: %d \n", (i+1), t->name, best_5_cars[i]->number, (t->team_number+1), best_5_cars[i]->completed_laps, best_5_cars[i]->distance, best_5_cars[i]->box_stops);
     output = concat(output, line);
   }
+
   output = concat(output, "\tLast placed car:\n");
-  temp_team = first_team + car_worst->team_number; 
-  snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f |Box accesses: %d \n", race->number_of_cars, temp_team->name, car_worst->number, (temp_team->team_number+1), car_worst->completed_laps, car_worst->distance, car_worst->box_stops);
+  t = first_team + car_worst->team_number; 
+  snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f |Box accesses: %d \n", race->number_of_cars, t->name, car_worst->number, (t->team_number+1), car_worst->completed_laps, car_worst->distance, car_worst->box_stops);
   output = concat(output, line);
   
   int racing_cars = race->number_of_cars-race->finished_cars;
   output = concat(output, "\tOther Data:\n");
   snprintf(line, READ_BUFF, "\t\tStops at the boxes to refuel: %d\n\t\tMalfunctions total: %d\n\t\tRacing Cars: %d",t_box_stops, t_malfunc_num, racing_cars);
-
   output = concat(output, line);
-  
   print(output);
   free(best_5_cars);
 }

@@ -1,7 +1,7 @@
 #include "malfunction_manager.h"
 
 
-volatile int break_loop;
+int volatile break_loop;
 void b_loop(int signum){
     break_loop++;
 
