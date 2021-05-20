@@ -28,6 +28,8 @@ void clear_resources(int signum){
     
     print("SIMULATOR CLOSING");
     //Eliminar memória partilhada
+    
+    
     shmdt(race);
     if(shm_id >= 0)
       remove_shm();
@@ -38,8 +40,10 @@ void clear_resources(int signum){
     unlink(PIPENAME);
     sem_unlink(LOG_SEM_NAME);
   }
-  else shmdt(race);
-  sem_close(log_semaphore);
+  else{
+    shmdt(race);
+    sem_close(log_semaphore);
+  } 
   fclose(log_file);
   exit(0);
 }
@@ -163,6 +167,7 @@ char * concat (char * s1, char * s2) {
 void print_statistics(int signum){
   char *output;
   output = concat("", "\n\tStatistics!\n");
+  
   if(race->status == NOT_STARTED){
     output = concat(output, "\tCars are not racing");
     print(output);
@@ -173,14 +178,13 @@ void print_statistics(int signum){
   int t_malfunc_num = 0, t_box_stops = 0;
   
   car_struct *car_worst = first_car;
-  car_struct **best_5_cars = malloc(sizeof(car_struct * ) * 5);
+  car_struct **best_5_cars = malloc(sizeof(car_struct *) * 5);
   int used;
   for (int i = 0; i < 5; i++)
     best_5_cars[i] = NULL;
-  
   car_struct *temp;
   for (int i = 0; i < 6; i++){
-    for (int k = 0; i < race->finished_cars && k < 5; k++){
+    for (int k = 0; k < 5; k++){
       temp = first_car;
       for (int j = 0; j < config->number_of_teams * config->max_cars_team; j++){
         if(temp->finish_place == (i+1))
@@ -237,4 +241,12 @@ void print_statistics(int signum){
   output = concat(output, line);
   print(output);
   free(best_5_cars);
+
+  if(race->status == INTERRUPTED || race->status == TERMINATED)
+    race->status = NOT_STARTED;
+
+}
+
+float timedifference_msec(struct timeval t0, struct timeval t1){
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
 }

@@ -33,8 +33,9 @@ void race_manager_init(){
     while(TRUE){
         read_pipes();
         for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
+        print("RACE FINISHED!");
         kill(malfunction_manager_process, SIGUSR1);
-        print_statistics(0);
+        kill(main_pid, SIGTSTP);
         reset_race();
     }
     
@@ -42,11 +43,12 @@ void race_manager_init(){
 }
 
 void read_pipes(){
+    char *command;
+    char *savePtr = 0;
     while (TRUE){
         team_stuct *team_temp;
         car_struct *temp_car;
         if(race->finished_cars == race->number_of_cars && (race->status == STARTED || race->status == INTERRUPTED)){
-            print("RACE FINISHED!");
             race->status = TERMINATED;
             break;
         }
@@ -60,27 +62,30 @@ void read_pipes(){
             FD_SET(team_temp->comunication_pipe[0], &read_set);
             team_temp = (team_stuct *)(team_temp + 1);
         }
-
         if(select(named_pipe+1, &read_set, NULL, NULL, NULL) > 0){
             if(FD_ISSET(named_pipe, &read_set)){
                 if((readed_chars = read(named_pipe, line, READ_BUFF)) == -1)
                     perror("Error reding from named pipe: ");
                 line[readed_chars-1] = '\0';
-                if (race->status == STARTED) print(RACE_STARTED_ERR);
-                else print(process_command(line));
+                command = strtok_r(line, "\n", &savePtr);
+                while(command != NULL){
+                    if (race->status == STARTED) print(RACE_STARTED_ERR);
+                    else print(process_command(line));
+                    command = strtok_r(savePtr, "\n", &savePtr);
+                }
             }
             team_temp = (team_stuct *)(first_team);
             for (int i = 0; i < config->number_of_teams; i++){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
                     if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
                         snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
-                        print(line);
                         if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
                             race->finished_cars++;
                         if(temp_car->state == FINISHED){
                             car_classification++;
                             temp_car->finish_place = car_classification;
                         }
+                        print(line);
                     }
                 }
                 team_temp = (team_stuct *)(team_temp + 1);
@@ -115,9 +120,10 @@ char* process_command(char *line){
     strcpy(command, line);
     strtok(command, " ");
     if (strcmp(line, START_RACE) == 0){
+        free(command);
         if (verify_teams() == TRUE){
             start_race();
-            free(command);
+            
             return RACE_STARTING;
         }
         return START_ERROR;
@@ -295,7 +301,6 @@ void reset_race(){
     close_pipes();
     car_classification = 0;
     race->finished_cars = 0;
-    race->status = NOT_STARTED;
     create_pipes();
     FD_ZERO(&read_set);
 }

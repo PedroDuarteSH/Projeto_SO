@@ -19,7 +19,7 @@
 #include <sys/msg.h>
 #include <fcntl.h>
 #include <signal.h>
-
+#include <sys/time.h>
 
 #define DEBUG
 #define READ_BUFF 512

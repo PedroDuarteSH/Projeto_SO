@@ -15,6 +15,8 @@ pthread_t *cars;
 
 pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_mutex_t access_box = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t access_box_cond = PTHREAD_COND_INITIALIZER;
 
 void team_manager_start(team_stuct *self){
     this_team = self;
@@ -76,6 +78,9 @@ car_struct **find_team_cars(){
 }
 
 void *car_init(void * arg){
+    struct timeval last;
+    struct timeval current;
+    float elapsed;
     car_struct *car = (car_struct *)(arg);
     
     car->state = NOTSTARTED;
@@ -84,6 +89,7 @@ void *car_init(void * arg){
     car->current_fuel = (float) config->Fuel_tank_capacity;
     car->finish_place = 0;
     car->completed_laps = 0;
+
 #ifdef DEBUG
     char buffer [100];
     snprintf (buffer, 100, "Team %s :Car number %d is WAITING FOR RACE",this_team->name, car->number);
@@ -99,6 +105,8 @@ void *car_init(void * arg){
     //Wait for race to start
     sem_wait(&race->race_begin);
 
+    gettimeofday(&last, 0);
+    
     change_state(car, RACE);
     malfunction mal;
     while(TRUE){
@@ -123,28 +131,35 @@ void *car_init(void * arg){
             
                 
             pthread_mutex_lock(&check_box);
-            if(car->state == SECURITY || car->state != MALFUNTION)
+            if((car->state == SECURITY || car->state != MALFUNTION) && this_team->box_status != BUSY){
                 Car_access_Box(car);
-            else if(car->current_fuel < cons_4_laps && this_team->box_status == FREE)
+                gettimeofday(&last, 0);
+            }
+            else if(car->current_fuel < cons_4_laps && this_team->box_status == FREE){
                 Car_access_Box(car);
+                gettimeofday(&last, 0); 
+            }
+                
             else pthread_mutex_unlock(&check_box);
 
         }
 
-        if(car->state == SECURITY || car->state == MALFUNTION){
-            car->distance += car->speed * 0.3;
-            car->current_fuel -= car->consumption * 0.4;
-        }
-        else{
-            car->distance += car->speed;
-            car->current_fuel -= car->consumption;
-        }
         if(msgrcv(msq_id, &mal, sizeof(malfunction) - sizeof(long), car->ID,IPC_NOWAIT) == 0)
             if(car->state != MALFUNTION){
                 change_state(car, MALFUNTION);
                 car->malfuntions_n++;
             }
-        usleep(1 * 1000000 /config->T_units_second);
+        gettimeofday(&current, 0);
+        elapsed = timedifference_msec(last, current) / 100 * config->T_units_second; 
+        last = current;
+        if(car->state == SECURITY || car->state == MALFUNTION){
+            car->distance += car->speed * 0.3 * elapsed;
+            car->current_fuel -= car->consumption * 0.4 * elapsed;
+        }
+        else{
+            car->distance += car->speed * elapsed;
+            car->current_fuel -= car->consumption * elapsed;
+        }
     }
     if(car->current_fuel < 0)
         change_state(car, GAVE_UP);
@@ -180,4 +195,9 @@ void Car_access_Box(car_struct *this_car){
         usleep(repair_time * 1000000 /config->T_units_second);
     }
     change_state(this_car, RACE);
+    pthread_mutex_lock(&check_box);
+    this_team->box_status = FREE;
+    pthread_mutex_unlock(&check_box);
 }
+
+

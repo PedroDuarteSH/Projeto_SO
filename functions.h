@@ -29,7 +29,7 @@ void strip(char *phrase);
 //Log_writing
 void print(char *result);
 
-
+float timedifference_msec(struct timeval t0, struct timeval t1);
 //Print statistics
 void print_statistics(int signum);
 //Usefull information
