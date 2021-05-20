@@ -15,8 +15,6 @@ pthread_t *cars;
 
 pthread_mutex_t check_box = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_mutex_t access_box = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t access_box_cond = PTHREAD_COND_INITIALIZER;
 
 void team_manager_start(team_stuct *self){
     this_team = self;
@@ -115,7 +113,7 @@ void *car_init(void * arg){
             change_state(car, SECURITY);
         
         //Passing box
-        if(car->distance >= config->lap_distance){
+        if(car->distance >= (float) config->lap_distance){
             car->distance-=config->lap_distance;
             car->completed_laps++;
             if(race->status == INTERRUPTED){
@@ -141,7 +139,6 @@ void *car_init(void * arg){
             }
                 
             else pthread_mutex_unlock(&check_box);
-
         }
 
         if(msgrcv(msq_id, &mal, sizeof(malfunction) - sizeof(long), car->ID,IPC_NOWAIT) == 0)
