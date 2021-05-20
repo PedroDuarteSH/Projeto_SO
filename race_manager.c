@@ -86,6 +86,7 @@ void read_pipes(){
                             temp_car->finish_place = car_classification;
                         }
                         print(line);
+                        sem_post(&team_temp->write_pipe);
                     }
                 }
                 team_temp = (team_stuct *)(team_temp + 1);
@@ -280,7 +281,7 @@ int verify_teams(){
 }
 
 void finish_exit(int signum){
-    if(race->status == STARTED){
+    if(race->status != NOT_STARTED){
         interrupt_race(signum);
         read_pipes();
         for (int i = 0; i < config->number_of_teams; i++) wait(NULL);
@@ -300,7 +301,6 @@ void interrupt_race(int signum){
 void reset_race(){
     close_pipes();
     car_classification = 0;
-    race->finished_cars = 0;
     create_pipes();
     FD_ZERO(&read_set);
 }

@@ -174,6 +174,7 @@ void change_state(car_struct *car, int state){
             this_team->box_status = RESERVED;
         pthread_mutex_unlock(&check_box);
     }    
+    sem_wait(&this_team->write_pipe);
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
 

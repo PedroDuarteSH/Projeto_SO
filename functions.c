@@ -242,8 +242,11 @@ void print_statistics(int signum){
   print(output);
   free(best_5_cars);
 
-  if(race->status == INTERRUPTED || race->status == TERMINATED)
+  if((race->status == INTERRUPTED || race->status == TERMINATED) && race->finished_cars == race->number_of_cars){
     race->status = NOT_STARTED;
+    race->finished_cars = 0;
+  }
+    
 
 }
 
