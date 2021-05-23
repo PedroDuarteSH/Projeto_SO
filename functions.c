@@ -24,12 +24,6 @@ void clear_resources(int signum){
     print(concat("Error destroying race_begin semaphore: ", strerror(errno)));
     #endif  
   }
-
-  team_stuct *temp_team = first_team;
-  for (int i = 0; i < config->number_of_teams; i++){
-    sem_destroy(&temp_team->write_pipe);
-    temp_team = (team_stuct *)(temp_team + 1);
-  }
   
   car_struct * temp_car = first_car;
   for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){

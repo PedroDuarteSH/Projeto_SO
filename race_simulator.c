@@ -86,7 +86,6 @@ void clean_data(){
   team_stuct *temp_team = first_team;
   for (int i = 0; i < config->number_of_teams; i++){
     temp_team->team_number = EMPTY;
-    sem_init(&temp_team->write_pipe, 1, 1);
     temp_team = (team_stuct *)(temp_team + 1);
   }
   
