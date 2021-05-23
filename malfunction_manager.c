@@ -24,13 +24,15 @@ void malfunction_manager_init(){
                 break;
             car_struct * temp_car = first_car;
             for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
+                sem_wait(&temp_car->car_check);
                 if(temp_car->number != EMPTY && temp_car->state != GAVE_UP && temp_car->state != FINISHED){
+                    sem_post(&temp_car->car_check);
                     probability = rand() % 100 + 1;
                     if(temp_car->reliability < probability){
                         send_msg.carNumber = temp_car->ID;
                         msgsnd(msq_id,&send_msg,sizeof(malfunction)-sizeof(long),0);
                     }
-                }
+                }else sem_post(&temp_car->car_check);
                 temp_car = (car_struct *)(temp_car + 1);
             }
         }

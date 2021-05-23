@@ -19,7 +19,7 @@
 #include <sys/msg.h>
 #include <fcntl.h>
 #include <signal.h>
-
+#include <sys/time.h>
 
 #define DEBUG
 #define READ_BUFF 512
@@ -89,6 +89,7 @@ typedef struct team_stuct{
     int box_status;
     int number_team_cars;
     int comunication_pipe[2];
+    sem_t write_pipe;
 }team_stuct;
 
 typedef struct car_struct{
@@ -102,10 +103,11 @@ typedef struct car_struct{
     float current_fuel;
     float distance;
     int completed_laps;
-    
     int box_stops;
     int malfuntions_n;
     int finish_place;
+    sem_t car_check;
+
 }car_struct;
 
 
