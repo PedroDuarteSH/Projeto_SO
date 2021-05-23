@@ -192,6 +192,7 @@ void change_state(car_struct *car, int state){
         sem_post(&race->change_status);
     }
     sem_post(&car->car_check);
+
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
 

@@ -89,6 +89,7 @@ typedef struct team_stuct{
     int box_status;
     int number_team_cars;
     int comunication_pipe[2];
+    sem_t write_pipe;
 }team_stuct;
 
 typedef struct car_struct{
