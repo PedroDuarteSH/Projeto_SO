@@ -96,7 +96,6 @@ void read_pipes(){
                         }
                         sem_post(&temp_car->car_check);
                         print(line);
-                        sem_post(&team_temp->write_pipe);
                     }
                 }
                 team_temp = (team_stuct *)(team_temp + 1);

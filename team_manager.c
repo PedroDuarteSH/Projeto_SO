@@ -191,8 +191,8 @@ void change_state(car_struct *car, int state){
         race->finished_cars++;
         sem_post(&race->change_status);
     }
-    sem_post(&car->car_check);  
-    sem_wait(&this_team->write_pipe);
+    sem_post(&car->car_check);
+
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
 
