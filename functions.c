@@ -19,6 +19,11 @@ void clear_resources(int signum){
     #endif  
   }
 
+  if(sem_destroy(&race->change_status) == -1){
+    #ifdef DEBUG
+    print(concat("Error destroying race_begin semaphore: ", strerror(errno)));
+    #endif  
+  }
   //Destroy named semaphores
   if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
@@ -184,11 +189,15 @@ void print_statistics(int signum){
     best_5_cars[i] = NULL;
   car_struct *temp;
   for (int i = 0; i < 6; i++){
+
+    //First 5 cars 
     for (int k = 0; k < 5; k++){
       temp = first_car;
       for (int j = 0; j < config->number_of_teams * config->max_cars_team; j++){
+        sem_wait(&temp->car_check);
         if(temp->finish_place == (i+1))
           best_5_cars[i++] = temp;
+        sem_post(&temp->car_check);
         temp = temp + 1;
       }
     }
@@ -206,13 +215,19 @@ void print_statistics(int signum){
           }
         if(used == 0){
           if(i<5){
+            sem_wait(&temp->car_check);
             if(best_5_cars[i] == NULL || temp->completed_laps > best_5_cars[i]->completed_laps || (temp->completed_laps == best_5_cars[i]->completed_laps && temp->distance > best_5_cars[i]->distance)){
               best_5_cars[i] = temp;
             }
+            sem_post(&temp->car_check);
           }
-          else
+          else{
+            sem_wait(&temp->car_check);
             if(temp->completed_laps < car_worst->completed_laps || (temp->completed_laps == car_worst->completed_laps && temp->distance < car_worst->distance))
               car_worst = temp;
+            sem_post(&temp->car_check);
+          }
+           
         }
       }
       temp = temp + 1;
@@ -226,13 +241,17 @@ void print_statistics(int signum){
 
   for (int i = 0; i < 5; i++){
     t = first_team + best_5_cars[i]->team_number; 
+    sem_wait(&best_5_cars[i]->car_check);
     snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f | Box accesses: %d \n", (i+1), t->name, best_5_cars[i]->number, (t->team_number+1), best_5_cars[i]->completed_laps, best_5_cars[i]->distance, best_5_cars[i]->box_stops);
+    sem_post(&best_5_cars[i]->car_check);
     output = concat(output, line);
   }
 
   output = concat(output, "\tLast placed car:\n");
   t = first_team + car_worst->team_number; 
+  sem_wait(&car_worst->car_check);
   snprintf(line, READ_BUFF, "\t\t%dª Position: [TEAM %s] Car %d of team %d -> Elapsed Laps: %d | Elapsed Lap Distance: %f |Box accesses: %d \n", race->number_of_cars, t->name, car_worst->number, (t->team_number+1), car_worst->completed_laps, car_worst->distance, car_worst->box_stops);
+  sem_post(&car_worst->car_check);
   output = concat(output, line);
   
   int racing_cars = race->number_of_cars-race->finished_cars;
@@ -241,12 +260,12 @@ void print_statistics(int signum){
   output = concat(output, line);
   print(output);
   free(best_5_cars);
-
+  sem_wait(&race->change_status);
   if((race->status == INTERRUPTED || race->status == TERMINATED) && race->finished_cars == race->number_of_cars){
     race->status = NOT_STARTED;
     race->finished_cars = 0;
   }
-    
+  sem_post(&race->change_status);
 
 }
 

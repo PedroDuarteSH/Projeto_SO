@@ -103,10 +103,11 @@ typedef struct car_struct{
     float current_fuel;
     float distance;
     int completed_laps;
-    
     int box_stops;
     int malfuntions_n;
     int finish_place;
+    sem_t car_check;
+
 }car_struct;
 
 

@@ -69,13 +69,19 @@ void init_program(){
   first_car = (car_struct *)(first_team + config->number_of_teams);
   
   clean_data();
-  //Race Semaphores Init
-  sem_init(&race->race_begin, 1, 0);
-  sem_init(&race->cars_ready, 1, 0);
+
+  
 }
 
 void clean_data(){
+  //Race Semaphores Init
+  sem_init(&race->race_begin, 1, 0);
+  sem_init(&race->cars_ready, 1, 0);
+  sem_init(&race->change_status, 1, 1);
+
+  sem_wait(&race->change_status);
   race->status = NOT_STARTED;
+  sem_post(&race->change_status);
   race->number_of_cars = 0;
   race->finished_cars = 0;
   team_stuct *temp_team = first_team;
@@ -84,10 +90,12 @@ void clean_data(){
     sem_init(&temp_team->write_pipe, 1, 1);
     temp_team = (team_stuct *)(temp_team + 1);
   }
+  
   car_struct * temp_car = first_car;
   for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
     temp_car->number = EMPTY;
     temp_car->ID = i+1;
+    sem_init(&temp_car->car_check, 1, 1);
     temp_car = (car_struct *)(temp_car + 1);
   }
 }

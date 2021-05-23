@@ -48,10 +48,12 @@ void read_pipes(){
     while (TRUE){
         team_stuct *team_temp;
         car_struct *temp_car;
+        sem_wait(&race->change_status);
         if(race->finished_cars == race->number_of_cars && (race->status == STARTED || race->status == INTERRUPTED)){
             race->status = TERMINATED;
+            sem_post(&race->change_status);
             break;
-        }
+        }else sem_post(&race->change_status);
                 
         //Open Named Pipe
         named_pipe = open(PIPENAME, O_RDWR | O_NONBLOCK);
@@ -69,8 +71,16 @@ void read_pipes(){
                 line[readed_chars-1] = '\0';
                 command = strtok_r(line, "\n", &savePtr);
                 while(command != NULL){
-                    if (race->status == STARTED) print(RACE_STARTED_ERR);
-                    else print(process_command(line));
+                    sem_wait(&race->change_status);
+                    if (race->status == STARTED){
+                        print(RACE_STARTED_ERR);
+                        sem_post(&race->change_status);
+                    }
+                    
+                    else{
+                        sem_post(&race->change_status);
+                        print(process_command(line));
+                    }
                     command = strtok_r(savePtr, "\n", &savePtr);
                 }
             }
@@ -79,12 +89,14 @@ void read_pipes(){
                 if(FD_ISSET(team_temp->comunication_pipe[0], &read_set)){
                     if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
                         snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
+                        sem_wait(&temp_car->car_check);
                         if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
                             race->finished_cars++;
                         if(temp_car->state == FINISHED){
                             car_classification++;
                             temp_car->finish_place = car_classification;
                         }
+                        sem_post(&temp_car->car_check);
                         print(line);
                         sem_post(&team_temp->write_pipe);
                     }
@@ -238,7 +250,9 @@ team_stuct *create_team(team_stuct *team_struct, char *team_name, int team_numbe
 
 void start_race(){
     //Change status to ignore input commands
+    sem_wait(&race->change_status);
     race->status = STARTED;
+    sem_post(&race->change_status);
     //Create team processes
     team_stuct *temp_team = first_team;
     for (int i = 0; i < config->number_of_teams; i++){
@@ -293,9 +307,11 @@ void finish_exit(int signum){
 
 void interrupt_race(int signum){
     print("RECIEVED RACE INTERRUPTION");
+    sem_wait(&race->change_status);
     if(race->status == STARTED){
         race->status = INTERRUPTED;
     }
+    sem_post(&race->change_status);
 }
 
 void reset_race(){

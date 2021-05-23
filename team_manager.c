@@ -109,6 +109,7 @@ void *car_init(void * arg){
     malfunction mal;
     while(TRUE){
         if(car->current_fuel < 0)break;
+       
         if(car->current_fuel < cons_4_laps/2 && car->state == RACE)
             change_state(car, SECURITY);
         
@@ -116,11 +117,13 @@ void *car_init(void * arg){
         if(car->distance >= (float) config->lap_distance){
             car->distance-=config->lap_distance;
             car->completed_laps++;
+            sem_wait(&race->change_status);
             if(race->status == INTERRUPTED){
+                sem_post(&race->change_status);
                 car->distance = 0;
                 change_state(car, GAVE_UP);
                 pthread_exit(NULL);
-            }
+            }else sem_post(&race->change_status);
                 
             if(car->completed_laps == config->lap_number){
                 car->distance = 0;
@@ -144,19 +147,27 @@ void *car_init(void * arg){
         if(msgrcv(msq_id, &mal, sizeof(malfunction) - sizeof(long), car->ID,IPC_NOWAIT) == 0)
             if(car->state != MALFUNTION){
                 change_state(car, MALFUNTION);
+                sem_wait(&car->car_check);
                 car->malfuntions_n++;
+                sem_post(&car->car_check);
             }
         gettimeofday(&current, 0);
         elapsed = timedifference_msec(last, current) / 100 * config->T_units_second; 
         last = current;
         if(car->state == SECURITY || car->state == MALFUNTION){
+            sem_wait(&car->car_check);
             car->distance += car->speed * 0.3 * elapsed;
             car->current_fuel -= car->consumption * 0.4 * elapsed;
+            sem_post(&car->car_check);
         }
         else{
+            sem_wait(&car->car_check);
             car->distance += car->speed * elapsed;
             car->current_fuel -= car->consumption * elapsed;
+            sem_post(&car->car_check);
         }
+        //0.1s sleep to not overload cpu
+        usleep(100000);
     }
     if(car->current_fuel < 0)
         change_state(car, GAVE_UP);
@@ -167,13 +178,15 @@ void *car_init(void * arg){
 
 
 void change_state(car_struct *car, int state){
+    sem_wait(&car->car_check);
     car->state = state;
     if(car->state == SECURITY || car->state == MALFUNTION){
         pthread_mutex_lock(&check_box);
         if(this_team->box_status == FREE)
             this_team->box_status = RESERVED;
         pthread_mutex_unlock(&check_box);
-    }    
+    } 
+    sem_post(&car->car_check);  
     sem_wait(&this_team->write_pipe);
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));
 }
