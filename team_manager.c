@@ -185,7 +185,12 @@ void change_state(car_struct *car, int state){
         if(this_team->box_status == FREE)
             this_team->box_status = RESERVED;
         pthread_mutex_unlock(&check_box);
-    } 
+    }
+    if(car->state == FINISHED || car->state == GAVE_UP){
+        sem_wait(&race->change_status);
+        race->finished_cars++;
+        sem_post(&race->change_status);
+    }
     sem_post(&car->car_check);  
     sem_wait(&this_team->write_pipe);
     write(this_team->comunication_pipe[1], &car, sizeof(car_struct *));

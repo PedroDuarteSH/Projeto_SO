@@ -78,7 +78,6 @@ void clean_data(){
   sem_init(&race->race_begin, 1, 0);
   sem_init(&race->cars_ready, 1, 0);
   sem_init(&race->change_status, 1, 1);
-
   sem_wait(&race->change_status);
   race->status = NOT_STARTED;
   sem_post(&race->change_status);

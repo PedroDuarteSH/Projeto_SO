@@ -24,6 +24,19 @@ void clear_resources(int signum){
     print(concat("Error destroying race_begin semaphore: ", strerror(errno)));
     #endif  
   }
+
+  team_stuct *temp_team = first_team;
+  for (int i = 0; i < config->number_of_teams; i++){
+    sem_destroy(&temp_team->write_pipe);
+    temp_team = (team_stuct *)(temp_team + 1);
+  }
+  
+  car_struct * temp_car = first_car;
+  for (int i = 0; i < config->number_of_teams * config->max_cars_team; i++){
+    sem_destroy(&temp_car->car_check);
+    temp_car = (car_struct *)(temp_car + 1);
+  }
+
   //Destroy named semaphores
   if(getpid() == main_pid){
     //Esperar pelos processos filho (Corrida e Malfunction)
@@ -32,9 +45,9 @@ void clear_resources(int signum){
     print_statistics(SIGTSTP);
     
     print("SIMULATOR CLOSING");
+    
+    
     //Eliminar memória partilhada
-    
-    
     shmdt(race);
     if(shm_id >= 0)
       remove_shm();
@@ -254,7 +267,10 @@ void print_statistics(int signum){
   sem_post(&car_worst->car_check);
   output = concat(output, line);
   
+  sem_wait(&race->change_status);
   int racing_cars = race->number_of_cars-race->finished_cars;
+  sem_post(&race->change_status);
+
   output = concat(output, "\tOther Data:\n");
   snprintf(line, READ_BUFF, "\t\tStops at the boxes to refuel: %d\n\t\tMalfunctions total: %d\n\t\tRacing Cars: %d",t_box_stops, t_malfunc_num, racing_cars);
   output = concat(output, line);
@@ -263,7 +279,6 @@ void print_statistics(int signum){
   sem_wait(&race->change_status);
   if((race->status == INTERRUPTED || race->status == TERMINATED) && race->finished_cars == race->number_of_cars){
     race->status = NOT_STARTED;
-    race->finished_cars = 0;
   }
   sem_post(&race->change_status);
 

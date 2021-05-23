@@ -90,8 +90,6 @@ void read_pipes(){
                     if(read(team_temp->comunication_pipe[0], &temp_car, sizeof(car_struct *)) > 0){
                         snprintf(line, READ_BUFF, "Car %d from team %s %s",temp_car->number, team_temp->name, car_states[temp_car->state]);
                         sem_wait(&temp_car->car_check);
-                        if(temp_car->state == FINISHED || temp_car->state == GAVE_UP)
-                            race->finished_cars++;
                         if(temp_car->state == FINISHED){
                             car_classification++;
                             temp_car->finish_place = car_classification;
@@ -249,6 +247,7 @@ team_stuct *create_team(team_stuct *team_struct, char *team_name, int team_numbe
 }
 
 void start_race(){
+    race->finished_cars = 0;
     //Change status to ignore input commands
     sem_wait(&race->change_status);
     race->status = STARTED;
